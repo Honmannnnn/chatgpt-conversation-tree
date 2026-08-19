@@ -867,6 +867,49 @@ button {
   animation: ctree-toast-in 160ms ease-out;
 }
 
+.ctree-error {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 2147483647;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 22px;
+  color: var(--ctree-text);
+  background: var(--ctree-surface);
+  border: 1px solid var(--ctree-border);
+  border-radius: 12px;
+  box-shadow: var(--ctree-shadow);
+  text-align: center;
+}
+
+.ctree-error__icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: #dc2626;
+  border-radius: 10px;
+  font-weight: 800;
+}
+
+.ctree-error strong {
+  font-size: 13px;
+}
+
+.ctree-error span {
+  max-width: 260px;
+  overflow: auto;
+  color: var(--ctree-muted);
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 @keyframes ctree-toast-in {
   from {
     opacity: 0;

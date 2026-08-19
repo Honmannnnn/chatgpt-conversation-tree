@@ -1,6 +1,7 @@
 import { useConversationTreeStore } from './store';
 import { TreePanel } from './components/TreePanel';
 import { FloatingButton } from './components/FloatingButton';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 export function App() {
   const panelOpen = useConversationTreeStore((state) => state.panelOpen);
@@ -8,7 +9,11 @@ export function App() {
   return (
     <>
       <FloatingButton />
-      {panelOpen ? <TreePanel /> : null}
+      {panelOpen ? (
+        <ErrorBoundary>
+          <TreePanel />
+        </ErrorBoundary>
+      ) : null}
     </>
   );
 }

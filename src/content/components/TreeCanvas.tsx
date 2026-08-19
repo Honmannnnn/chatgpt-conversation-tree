@@ -179,7 +179,8 @@ export function TreeCanvas() {
   };
 
   const onPointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
-    if (!dragState.current) {
+    const drag = dragState.current;
+    if (!drag) {
       return;
     }
 
@@ -190,18 +191,22 @@ export function TreeCanvas() {
 
     const scaleX = viewBox.width / rect.width;
     const scaleY = viewBox.height / rect.height;
-    const dx = (event.clientX - dragState.current.startX) * scaleX;
-    const dy = (event.clientY - dragState.current.startY) * scaleY;
+    const dx = (event.clientX - drag.startX) * scaleX;
+    const dy = (event.clientY - drag.startY) * scaleY;
     setViewBox((current) => ({
       ...current,
-      x: dragState.current!.viewX - dx,
-      y: dragState.current!.viewY - dy,
+      x: drag.viewX - dx,
+      y: drag.viewY - dy,
     }));
   };
 
   const onPointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
     dragState.current = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture may already be released by the browser.
+    }
   };
 
   return (

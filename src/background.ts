@@ -100,6 +100,15 @@ async function handleMessage(
       return respond();
     }
 
+    case MessageTypes.TogglePanel: {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.id) {
+        await chrome.tabs.sendMessage(tab.id, message).catch(() => undefined);
+      }
+
+      return respond();
+    }
+
     default:
       return respondError(`Unsupported message type: ${String(message.type)}`);
   }

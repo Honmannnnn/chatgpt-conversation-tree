@@ -47,11 +47,12 @@ function isDarkTheme(): boolean {
 }
 
 function mountUi(): void {
-  if (document.getElementById(HOST_ID)) {
+  const existingHost = document.getElementById(HOST_ID) as HTMLDivElement | null;
+  if (existingHost?.shadowRoot) {
     return;
   }
 
-  const host = document.createElement('div');
+  const host = existingHost ?? document.createElement('div');
   host.id = HOST_ID;
   host.dataset.ctreeHost = 'true';
   const applyTheme = () => {
@@ -71,8 +72,28 @@ function mountUi(): void {
   }
   const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
   darkMedia.addEventListener?.('change', applyTheme);
-  window.addEventListener('DOMContentLoaded', applyTheme);
-  document.documentElement.appendChild(host);
+  const ensureHostConnected = () => {
+    const parent = document.body ?? document.documentElement;
+    if (!host.isConnected) {
+      parent.appendChild(host);
+    } else if (document.body && host.parentElement !== document.body) {
+      document.body.appendChild(host);
+    }
+
+    if (document.body && !themeObserver.takeRecords().some(() => false)) {
+      themeObserver.observe(document.body, themeObserverOptions);
+    }
+  };
+  window.addEventListener('DOMContentLoaded', () => {
+    applyTheme();
+    ensureHostConnected();
+  });
+  if (document.body) {
+    ensureHostConnected();
+  } else {
+    document.documentElement.appendChild(host);
+  }
+  window.setInterval(ensureHostConnected, 2000);
 
   const shadow = host.attachShadow({ mode: 'open' });
   const style = document.createElement('style');
