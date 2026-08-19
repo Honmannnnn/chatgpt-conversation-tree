@@ -52,6 +52,8 @@ export function TreeCanvas() {
   const graph = useConversationTreeStore((state) => state.graph);
   const selectedNodeId = useConversationTreeStore((state) => state.selectedNodeId);
   const searchQuery = useConversationTreeStore((state) => state.searchQuery);
+  const roleFilter = useConversationTreeStore((state) => state.roleFilter);
+  const activeOnly = useConversationTreeStore((state) => state.activeOnly);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [viewBox, setViewBox] = useState<ViewBox>({ x: 0, y: 0, width: 1200, height: 600 });
   const dragState = useRef<{ startX: number; startY: number; viewX: number; viewY: number } | null>(null);
@@ -86,21 +88,18 @@ export function TreeCanvas() {
 
   const visibleNodeIds = new Set<string>();
 
-  if (query) {
-    for (const node of layout.nodes) {
-      const matches = `${node.node.title} ${node.node.content}`.toLowerCase().includes(query);
-      if (matches) {
-        visibleNodeIds.add(node.id);
-        let cursor = node.node.parentId;
-        while (cursor && graph.nodes[cursor]) {
-          visibleNodeIds.add(cursor);
-          cursor = graph.nodes[cursor].parentId;
-        }
-      }
-    }
-  } else {
-    for (const node of layout.nodes) {
+  for (const node of layout.nodes) {
+    const matchesQuery = !query || `${node.node.title} ${node.node.content}`.toLowerCase().includes(query);
+    const matchesRole = roleFilter === 'all' || node.node.role === roleFilter;
+    const matchesActive = !activeOnly || node.node.active;
+
+    if (matchesQuery && matchesRole && matchesActive) {
       visibleNodeIds.add(node.id);
+      let cursor = node.node.parentId;
+      while (cursor && graph.nodes[cursor]) {
+        visibleNodeIds.add(cursor);
+        cursor = graph.nodes[cursor].parentId;
+      }
     }
   }
 

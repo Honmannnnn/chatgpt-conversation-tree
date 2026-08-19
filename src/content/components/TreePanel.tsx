@@ -2,7 +2,10 @@ import { useEffect, useMemo } from 'react';
 import { useConversationTreeStore } from '../store';
 import { MessageTypes } from '../../shared/messages';
 import { NodeDetail } from './NodeDetail';
+import { SearchResults } from './SearchResults';
 import { TreeCanvas } from './TreeCanvas';
+import { downloadJson, downloadMarkdown, downloadSvg } from '../../shared/exporters';
+import type { MessageRole } from '../../shared/types';
 
 export function TreePanel() {
   const graph = useConversationTreeStore((state) => state.graph);
@@ -10,11 +13,15 @@ export function TreePanel() {
   const searchQuery = useConversationTreeStore((state) => state.searchQuery);
   const isRefreshing = useConversationTreeStore((state) => state.isRefreshing);
   const notice = useConversationTreeStore((state) => state.notice);
+  const roleFilter = useConversationTreeStore((state) => state.roleFilter);
+  const activeOnly = useConversationTreeStore((state) => state.activeOnly);
   const setSearchQuery = useConversationTreeStore((state) => state.setSearchQuery);
   const setPanelOpen = useConversationTreeStore((state) => state.setPanelOpen);
   const setSelectedNodeId = useConversationTreeStore((state) => state.setSelectedNodeId);
   const setIsRefreshing = useConversationTreeStore((state) => state.setIsRefreshing);
   const setNotice = useConversationTreeStore((state) => state.setNotice);
+  const setRoleFilter = useConversationTreeStore((state) => state.setRoleFilter);
+  const setActiveOnly = useConversationTreeStore((state) => state.setActiveOnly);
 
   useEffect(() => {
     if (!notice) {
@@ -42,6 +49,28 @@ export function TreePanel() {
   };
 
   const clearSelection = () => setSelectedNodeId(null);
+
+  const exportGraph = (kind: 'json' | 'markdown' | 'svg') => {
+    if (!graph) {
+      setNotice('暂无可导出的对话数据');
+      return;
+    }
+
+    if (kind === 'json') {
+      downloadJson(graph);
+      setNotice('已导出 JSON');
+    }
+
+    if (kind === 'markdown') {
+      downloadMarkdown(graph);
+      setNotice('已导出 Markdown');
+    }
+
+    if (kind === 'svg') {
+      downloadSvg(graph);
+      setNotice('已导出 SVG');
+    }
+  };
 
   return (
     <aside className="ctree-panel" aria-label="ChatGPT 对话树">
@@ -105,6 +134,37 @@ export function TreePanel() {
           <button className="ctree-search__clear" type="button" onClick={() => setSearchQuery('')} aria-label="清除搜索">×</button>
         ) : null}
       </div>
+
+      <div className="ctree-toolbar">
+        <select
+          className="ctree-select"
+          value={roleFilter}
+          onChange={(event) => setRoleFilter(event.target.value as MessageRole | 'all')}
+          aria-label="角色筛选"
+        >
+          <option value="all">全部角色</option>
+          <option value="user">用户</option>
+          <option value="assistant">模型</option>
+          <option value="tool">工具</option>
+          <option value="system">系统</option>
+        </select>
+        <label className="ctree-toggle">
+          <input
+            type="checkbox"
+            checked={activeOnly}
+            onChange={(event) => setActiveOnly(event.target.checked)}
+          />
+          <span>仅活跃路径</span>
+        </label>
+        <div className="ctree-toolbar__spacer" />
+        <div className="ctree-export-group">
+          <button className="ctree-mini-button ctree-export-button" type="button" onClick={() => exportGraph('json')} title="导出 JSON">JSON</button>
+          <button className="ctree-mini-button ctree-export-button" type="button" onClick={() => exportGraph('markdown')} title="导出 Markdown">MD</button>
+          <button className="ctree-mini-button ctree-export-button" type="button" onClick={() => exportGraph('svg')} title="导出 SVG">SVG</button>
+        </div>
+      </div>
+
+      <SearchResults />
 
       <div className="ctree-panel__body">
         {graph ? (

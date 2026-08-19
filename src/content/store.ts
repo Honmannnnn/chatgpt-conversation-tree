@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ConversationGraph } from '../shared/types';
+import type { ConversationGraph, MessageRole } from '../shared/types';
 
 interface ConversationTreeState {
   graph: ConversationGraph | null;
@@ -9,6 +9,8 @@ interface ConversationTreeState {
   collapsed: Record<string, boolean>;
   isRefreshing: boolean;
   notice: string | null;
+  roleFilter: MessageRole | 'all';
+  activeOnly: boolean;
   setGraph: (graph: ConversationGraph | null) => void;
   setPanelOpen: (open: boolean) => void;
   togglePanel: () => void;
@@ -17,6 +19,8 @@ interface ConversationTreeState {
   toggleCollapsed: (nodeId: string) => void;
   setIsRefreshing: (refreshing: boolean) => void;
   setNotice: (notice: string | null) => void;
+  setRoleFilter: (roleFilter: MessageRole | 'all') => void;
+  setActiveOnly: (activeOnly: boolean) => void;
 }
 
 export const useConversationTreeStore = create<ConversationTreeState>((set) => ({
@@ -27,6 +31,8 @@ export const useConversationTreeStore = create<ConversationTreeState>((set) => (
   collapsed: {},
   isRefreshing: false,
   notice: null,
+  roleFilter: 'all',
+  activeOnly: false,
   setGraph: (graph) => set({ graph, selectedNodeId: null, collapsed: {} }),
   setPanelOpen: (panelOpen) => set({ panelOpen }),
   togglePanel: () => set((state) => ({ panelOpen: !state.panelOpen })),
@@ -40,4 +46,6 @@ export const useConversationTreeStore = create<ConversationTreeState>((set) => (
   })),
   setIsRefreshing: (isRefreshing) => set({ isRefreshing }),
   setNotice: (notice) => set({ notice }),
+  setRoleFilter: (roleFilter) => set({ roleFilter }),
+  setActiveOnly: (activeOnly) => set({ activeOnly }),
 }));

@@ -1,5 +1,6 @@
 import { useConversationTreeStore } from '../store';
 import { selectAndNavigate } from '../navigation';
+import { copyText } from '../../shared/exporters';
 
 interface NodeDetailProps {
   nodeId: string;
@@ -24,6 +25,7 @@ function roleText(role: string): string {
 
 export function NodeDetail({ nodeId, onClose }: NodeDetailProps) {
   const graph = useConversationTreeStore((state) => state.graph);
+  const setNotice = useConversationTreeStore((state) => state.setNotice);
   const node = graph?.nodes[nodeId];
 
   if (!graph || !node) {
@@ -43,6 +45,11 @@ export function NodeDetail({ nodeId, onClose }: NodeDetailProps) {
     void selectAndNavigate(childId);
   };
 
+  const copyContent = async () => {
+    const copied = await copyText(node.content);
+    setNotice(copied ? '内容已复制' : '复制失败，请手动选择文本');
+  };
+
   return (
     <section className="ctree-detail">
       <div className="ctree-detail__header">
@@ -57,6 +64,7 @@ export function NodeDetail({ nodeId, onClose }: NodeDetailProps) {
         <span>{node.versionLabel ? `版本 ${node.versionLabel}` : '单版本'}</span>
         <span>{node.children.length} 个子分支</span>
         {node.modelSlug ? <span>{node.modelSlug}</span> : null}
+        <button className="ctree-copy-button" type="button" onClick={copyContent}>复制内容</button>
       </div>
 
       <div className="ctree-detail__content">

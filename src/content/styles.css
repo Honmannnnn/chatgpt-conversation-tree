@@ -271,6 +271,182 @@ button {
   line-height: 1;
 }
 
+.ctree-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 10px 14px 0;
+  min-width: 0;
+}
+
+.ctree-select {
+  height: 30px;
+  min-width: 0;
+  padding: 0 26px 0 9px;
+  color: var(--ctree-text);
+  background: var(--ctree-surface-2);
+  border: 1px solid var(--ctree-border);
+  border-radius: 8px;
+  outline: 0;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.ctree-select:focus {
+  border-color: color-mix(in srgb, var(--ctree-accent) 60%, var(--ctree-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ctree-accent) 12%, transparent);
+}
+
+.ctree-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 8px;
+  color: var(--ctree-muted);
+  background: var(--ctree-surface-2);
+  border: 1px solid var(--ctree-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.ctree-toggle input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--ctree-accent);
+  cursor: pointer;
+}
+
+.ctree-toolbar__spacer {
+  flex: 1;
+  min-width: 4px;
+}
+
+.ctree-export-group {
+  display: flex;
+  gap: 3px;
+}
+
+.ctree-export-button {
+  width: auto;
+  min-width: 31px;
+  padding: 0 5px;
+  color: var(--ctree-muted);
+  background: var(--ctree-surface-2);
+  border: 1px solid var(--ctree-border);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.ctree-export-button:hover {
+  color: var(--ctree-text);
+  border-color: color-mix(in srgb, var(--ctree-accent) 45%, var(--ctree-border));
+}
+
+.ctree-results {
+  max-height: 160px;
+  margin: 8px 14px 0;
+  overflow: auto;
+  background: var(--ctree-surface);
+  border: 1px solid var(--ctree-border);
+  border-radius: 9px;
+}
+
+.ctree-results__header {
+  padding: 7px 9px;
+  color: var(--ctree-muted);
+  border-bottom: 1px solid var(--ctree-border);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.ctree-results__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ctree-result {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 9px;
+  color: var(--ctree-text);
+  background: transparent;
+  border-bottom: 1px solid var(--ctree-border);
+  cursor: pointer;
+  text-align: left;
+}
+
+.ctree-result:last-child {
+  border-bottom: 0;
+}
+
+.ctree-result:hover {
+  background: var(--ctree-bg);
+}
+
+.ctree-result__dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: var(--ctree-user);
+}
+
+.ctree-result__dot.is-assistant {
+  background: var(--ctree-assistant);
+}
+
+.ctree-result__dot.is-tool {
+  background: var(--ctree-tool);
+}
+
+.ctree-result__dot.is-system {
+  background: var(--ctree-muted);
+}
+
+.ctree-result__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ctree-result__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ctree-result__title b {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ctree-result__title em {
+  padding: 1px 4px;
+  color: var(--ctree-muted);
+  background: var(--ctree-surface-2);
+  border-radius: 4px;
+  font-size: 9px;
+  font-style: normal;
+}
+
+.ctree-result__text {
+  overflow: hidden;
+  color: var(--ctree-muted);
+  font-size: 10px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ctree-panel__body {
   position: relative;
   flex: 1;
@@ -571,6 +747,22 @@ button {
   font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ctree-copy-button {
+  height: 23px;
+  padding: 0 7px;
+  color: var(--ctree-accent);
+  background: color-mix(in srgb, var(--ctree-accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ctree-accent) 24%, var(--ctree-border));
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.ctree-copy-button:hover {
+  background: color-mix(in srgb, var(--ctree-accent) 16%, transparent);
 }
 
 .ctree-detail__content {
