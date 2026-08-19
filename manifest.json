@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ChatGPT Conversation Tree",
   "short_name": "Conversation Tree",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "ChatGPT 对话分支树：实时显示所有编辑分支、消息版本分支与当前活跃路径。",
   "permissions": [
     "storage",

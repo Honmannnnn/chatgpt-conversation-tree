@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3
+
+- 修复 `injected.js` 在 `document_start` 阶段未真正加载，导致 ChatGPT API 无法捕获的问题。
+- 移除会产生 404 噪声的手动 conversation 请求，刷新动作改为重新加载页面。
+
 ## 1.0.2
 
 - 修复拖拽树图后 React 读取空拖拽状态导致面板崩溃的问题。

@@ -8,11 +8,6 @@ import styles from './styles.css?inline';
 const HOST_ID = 'ctree-root';
 const INJECTED_SCRIPT_ID = 'ctree-injected';
 
-function getConversationIdFromLocation(): string | null {
-  const match = window.location.pathname.match(/\/c\/([a-zA-Z0-9_-]+)/);
-  return match?.[1] ?? null;
-}
-
 function isDarkTheme(): boolean {
   const html = document.documentElement;
   const body = document.body;
@@ -108,15 +103,38 @@ function mountUi(): void {
 }
 
 function injectNetworkCapture(): void {
-  if (document.getElementById(INJECTED_SCRIPT_ID)) {
-    return;
-  }
+  const appendScript = () => {
+    if (!document.head) {
+      return;
+    }
 
-  const script = document.createElement('script');
-  script.id = INJECTED_SCRIPT_ID;
-  script.src = chrome.runtime.getURL('injected.js');
-  script.dataset.ctreeInjected = 'true';
-  (document.head || document.documentElement).appendChild(script);
+    document.getElementById(INJECTED_SCRIPT_ID)?.remove();
+
+    const script = document.createElement('script');
+    script.id = INJECTED_SCRIPT_ID;
+    script.src = chrome.runtime.getURL('injected.js');
+    script.dataset.ctreeInjected = 'true';
+    document.head.appendChild(script);
+  };
+
+  appendScript();
+
+  if (!document.getElementById(INJECTED_SCRIPT_ID)) {
+    const headObserver = new MutationObserver(() => {
+      if (document.head) {
+        headObserver.disconnect();
+        appendScript();
+      }
+    });
+    headObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+    window.addEventListener('DOMContentLoaded', () => {
+      headObserver.disconnect();
+      appendScript();
+    });
+  }
 }
 
 function handlePageMessage(event: MessageEvent): void {
@@ -143,33 +161,10 @@ function handlePageMessage(event: MessageEvent): void {
 }
 
 function requestRefresh(): void {
-  const conversationId = getConversationIdFromLocation();
-  if (!conversationId) {
-    return;
-  }
-
-  window.postMessage(
-    {
-      source: 'ctree-content',
-      type: 'FETCH_CONVERSATION',
-      conversationId,
-    },
-    '*',
-  );
-}
-
-function requestInitialRefresh(): void {
-  if (getConversationIdFromLocation()) {
-    requestRefresh();
-  }
+  window.location.reload();
 }
 
 window.addEventListener('message', handlePageMessage);
-window.addEventListener('load', requestInitialRefresh);
-
-if (document.readyState === 'complete') {
-  requestInitialRefresh();
-}
 
 chrome.runtime.onMessage.addListener((message: any) => {
   if (message?.type === MessageTypes.TogglePanel) {
