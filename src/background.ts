@@ -3,6 +3,9 @@ import type { ConversationGraph, ExtensionRequest, ExtensionResponse } from './s
 
 const CURRENT_CONVERSATION_KEY = 'ctree_current_conversation_id';
 const GRAPH_PREFIX = 'ctree_conversation:';
+const SCHEMA_VERSION_KEY = 'ctree_schema_version';
+const SCHEMA_VERSION = 1;
+const MAX_STORED_CONVERSATIONS = 30;
 
 function graphKey(conversationId: string): string {
   return `${GRAPH_PREFIX}${conversationId}`;
@@ -22,6 +25,27 @@ function respondError(error: string): ExtensionResponse {
   };
 }
 
+async function pruneOldGraphs(): Promise<void> {
+  const all = await chrome.storage.local.get(null);
+  const graphEntries = Object.entries(all)
+    .filter(([key]) => key.startsWith(GRAPH_PREFIX))
+    .map(([key, value]) => ({
+      key,
+      capturedAt: (value as ConversationGraph | undefined)?.capturedAt ?? 0,
+    }))
+    .sort((a, b) => b.capturedAt - a.capturedAt);
+
+  if (graphEntries.length <= MAX_STORED_CONVERSATIONS) {
+    return;
+  }
+
+  const keysToRemove = graphEntries
+    .slice(MAX_STORED_CONVERSATIONS)
+    .map((entry) => entry.key);
+
+  await chrome.storage.local.remove(keysToRemove);
+}
+
 async function handleMessage(
   message: ExtensionRequest,
 ): Promise<ExtensionResponse> {
@@ -36,6 +60,7 @@ async function handleMessage(
         [CURRENT_CONVERSATION_KEY]: graph.conversationId,
         [graphKey(graph.conversationId)]: graph,
       });
+      await pruneOldGraphs();
 
       return respond({ conversationId: graph.conversationId });
     }
@@ -89,5 +114,14 @@ chrome.runtime.onMessage.addListener((message: ExtensionRequest, _sender, sendRe
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  void chrome.storage.local.set({ ctree_installed_at: Date.now() });
+  void chrome.storage.local.set({
+    ctree_installed_at: Date.now(),
+    [SCHEMA_VERSION_KEY]: SCHEMA_VERSION,
+  });
+});
+
+void chrome.storage.local.get(SCHEMA_VERSION_KEY).then((result) => {
+  if (result[SCHEMA_VERSION_KEY] !== SCHEMA_VERSION) {
+    void chrome.storage.local.set({ [SCHEMA_VERSION_KEY]: SCHEMA_VERSION });
+  }
 });

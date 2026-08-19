@@ -126,7 +126,7 @@ function controlsFromButtons(buttons: HTMLElement[]): BranchControls {
 function findBranchControls(element: HTMLElement): BranchControls {
   let cursor: HTMLElement | null = element;
 
-  for (let depth = 0; cursor && depth < 4; depth += 1) {
+  for (let depth = 0; cursor && depth < 6; depth += 1) {
     const buttons = Array.from(cursor.querySelectorAll<HTMLElement>('button'));
     const controls = controlsFromButtons(buttons);
 
@@ -137,7 +137,15 @@ function findBranchControls(element: HTMLElement): BranchControls {
     cursor = cursor.parentElement;
   }
 
-  return { previous: [], next: [] };
+  const constrainedGlobalControls = controlsFromButtons(
+    Array.from(document.querySelectorAll<HTMLElement>(
+      'button[data-testid*="prev-button"], button[data-testid*="next-button"]',
+    )),
+  );
+
+  return constrainedGlobalControls.previous.length || constrainedGlobalControls.next.length
+    ? constrainedGlobalControls
+    : { previous: [], next: [] };
 }
 
 function scrollToMessage(element: HTMLElement): void {
@@ -187,8 +195,8 @@ export async function navigateToNode(
   let controls = findBranchControls(visibleSibling.element);
 
   for (let step = 0; step < maxSteps; step += 1) {
-    const button = direction === 'next' ? controls.next[0] : controls.previous[0];
-    if (!button) {
+    const button = (direction === 'next' ? controls.next[0] : controls.previous[0]) as HTMLButtonElement | undefined;
+    if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') {
       break;
     }
 

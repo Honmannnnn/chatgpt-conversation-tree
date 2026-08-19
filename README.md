@@ -4,7 +4,7 @@
 
 # 🧭 ChatGPT Conversation Tree
 
-[![Version](https://img.shields.io/badge/version-v0.1.0-blue.svg)](https://github.com/honmannnnn/chatgpt-conversation-tree)
+[![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)](https://github.com/honmannnnn/chatgpt-conversation-tree)
 [![Manifest](https://img.shields.io/badge/manifest-V3-green.svg)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
 [![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge-lightgrey.svg)](https://github.com/honmannnnn/chatgpt-conversation-tree)
 [![Privacy](https://img.shields.io/badge/privacy-100%25%20local-blueviolet.svg)](https://github.com/honmannnnn/chatgpt-conversation-tree)
@@ -72,6 +72,8 @@ Edge = parentId -> childId
 4. 打开 Chrome/Edge 扩展管理页，并开启“开发者模式”。
 5. 点击“加载解压的扩展程序”，选择解压后的目录。
 
+详细安装与排错说明见 [INSTALL.md](docs/INSTALL.md)。
+
 ### 开发者安装
 
 1. Clone 本项目到本地。
@@ -92,7 +94,11 @@ Edge = parentId -> childId
 - [x] **v0.3.0 分支导航**: 支持点击节点定位到原消息，兼容 ChatGPT 的编辑分支与消息版本切换控件。
 - [x] **v0.4.0 搜索与预览**: 增加全文搜索、消息详情侧栏、角色筛选和活跃版本切换。
 - [x] **v0.5.0 导出与快照**: 支持 JSON、Markdown、SVG 导出，以及节点内容复制。
-- [ ] **v1.0.0 稳定发布**: 适配 ChatGPT 主题与响应式布局，补充端到端测试和 Release 发布流程。
+- [x] **v1.0.0 稳定发布**: 适配 ChatGPT 主题与响应式布局，补充 Release 打包与安装排错文档。
+
+## 📦 版本记录
+
+完整版本变化见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 🛠️ 技术内幕
 
