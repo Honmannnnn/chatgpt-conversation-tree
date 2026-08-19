@@ -158,9 +158,9 @@ export function TreePanel() {
         </label>
         <div className="ctree-toolbar__spacer" />
         <div className="ctree-export-group">
-          <button className="ctree-mini-button ctree-export-button" type="button" onClick={() => exportGraph('json')} title="导出 JSON">JSON</button>
-          <button className="ctree-mini-button ctree-export-button" type="button" onClick={() => exportGraph('markdown')} title="导出 Markdown">MD</button>
-          <button className="ctree-mini-button ctree-export-button" type="button" onClick={() => exportGraph('svg')} title="导出 SVG">SVG</button>
+          <button className="ctree-export-button" type="button" onClick={() => exportGraph('json')} title="导出 JSON" aria-label="导出 JSON">JSON</button>
+          <button className="ctree-export-button" type="button" onClick={() => exportGraph('markdown')} title="导出 Markdown" aria-label="导出 Markdown">MD</button>
+          <button className="ctree-export-button" type="button" onClick={() => exportGraph('svg')} title="导出 SVG" aria-label="导出 SVG">SVG</button>
         </div>
       </div>
 

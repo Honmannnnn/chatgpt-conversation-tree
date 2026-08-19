@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.4
+
+- 优化树面板中的 JSON、Markdown、SVG 导出按钮样式。
+- 为浏览器工具栏 Popup 增加黑夜模式适配。
+
 ## 1.0.3
 
 - 修复 `injected.js` 在 `document_start` 阶段未真正加载，导致 ChatGPT API 无法捕获的问题。

@@ -327,23 +327,33 @@ button {
 
 .ctree-export-group {
   display: flex;
-  gap: 3px;
+  gap: 4px;
+  padding: 2px;
+  background: var(--ctree-surface-2);
+  border: 1px solid var(--ctree-border);
+  border-radius: 8px;
 }
 
 .ctree-export-button {
-  width: auto;
-  min-width: 31px;
-  padding: 0 5px;
+  height: 24px;
+  min-width: 32px;
+  padding: 0 7px;
+  display: inline-grid;
+  place-items: center;
   color: var(--ctree-muted);
-  background: var(--ctree-surface-2);
-  border: 1px solid var(--ctree-border);
-  font-size: 9px;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  font-size: 10px;
   font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 140ms ease, background 140ms ease;
 }
 
 .ctree-export-button:hover {
-  color: var(--ctree-text);
-  border-color: color-mix(in srgb, var(--ctree-accent) 45%, var(--ctree-border));
+  color: var(--ctree-accent);
+  background: color-mix(in srgb, var(--ctree-accent) 12%, transparent);
 }
 
 .ctree-results {

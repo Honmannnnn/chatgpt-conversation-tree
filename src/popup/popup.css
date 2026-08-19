@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   color: #111827;
   background: #f9fafb;
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -143,4 +144,58 @@ body {
 .popup__clear:hover {
   color: #dc2626;
   background: #fef2f2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    color: #f9fafb;
+    background: #111827;
+  }
+
+  body {
+    background: #111827;
+  }
+
+  .popup__mark {
+    color: #34d399;
+    background: #0f3b31;
+  }
+
+  .popup__header h1 {
+    color: #f9fafb;
+  }
+
+  .popup__header p,
+  .popup__status span,
+  .popup__clear {
+    color: #9ca3af;
+  }
+
+  .popup__status,
+  .popup__secondary {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .popup__status strong {
+    color: #f9fafb;
+  }
+
+  .popup__status-dot[data-state="ready"] {
+    box-shadow: 0 0 0 4px #123d32;
+  }
+
+  .popup__secondary {
+    color: #f9fafb;
+  }
+
+  .popup__secondary:hover {
+    background: #111827;
+  }
+
+  .popup__clear:hover {
+    color: #f87171;
+    background: #2d1518;
+  }
 }
