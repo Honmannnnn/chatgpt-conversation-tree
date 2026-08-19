@@ -3,7 +3,6 @@ import { buildTreeLayout } from '../../core/layout';
 import { useConversationTreeStore } from '../store';
 import { selectAndNavigate } from '../navigation';
 import type { MessageNode } from '../../shared/types';
-import { markdownToPlainText } from '../../shared/markdown';
 
 interface ViewBox {
   x: number;
@@ -283,8 +282,8 @@ export function TreeCanvas() {
             const active = node.active;
             const accent = nodeAccent(node);
             const label = roleLabel(node);
-            const content = markdownToPlainText(node.content);
-            const title = markdownToPlainText(node.title || content);
+            const content = node.plainContent || node.content;
+            const title = node.title || content;
 
             return (
               <g

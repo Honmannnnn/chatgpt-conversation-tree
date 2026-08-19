@@ -5,6 +5,7 @@ export interface MessageNode {
   sourceMessageId: string;
   role: MessageRole;
   content: string;
+  plainContent: string;
   title: string;
   parentId: string | null;
   children: string[];

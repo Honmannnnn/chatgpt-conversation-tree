@@ -182,6 +182,7 @@ export function parseConversationApiResponse(payload: unknown): ConversationGrap
       sourceMessageId: messageId,
       role,
       content,
+      plainContent,
       title: `${role === 'user' ? '提问' : role === 'assistant' ? '回复' : role} · ${plainContent.slice(0, 48) || messageId}`,
       parentId,
       children,

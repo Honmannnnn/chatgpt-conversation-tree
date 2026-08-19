@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { useConversationTreeStore } from '../store';
 import { selectAndNavigate } from '../navigation';
 import { copyText } from '../../shared/exporters';
-import { markdownToPlainText, renderMarkdown } from '../../shared/markdown';
+import { renderMarkdown } from '../../shared/markdown';
 
 interface NodeDetailProps {
   nodeId: string;
@@ -28,6 +29,10 @@ export function NodeDetail({ nodeId, onClose }: NodeDetailProps) {
   const graph = useConversationTreeStore((state) => state.graph);
   const setNotice = useConversationTreeStore((state) => state.setNotice);
   const node = graph?.nodes[nodeId];
+  const renderedContent = useMemo(
+    () => renderMarkdown(node?.content || '暂无文本内容'),
+    [node?.content],
+  );
 
   if (!graph || !node) {
     return null;
@@ -56,7 +61,7 @@ export function NodeDetail({ nodeId, onClose }: NodeDetailProps) {
       <div className="ctree-detail__header">
         <div>
           <span className={`ctree-detail__role is-${node.role}`}>{roleText(node.role)}</span>
-          <h2>{markdownToPlainText(node.title)}</h2>
+          <h2>{node.title}</h2>
         </div>
         <button className="ctree-icon-button" type="button" onClick={onClose} aria-label="关闭详情" title="关闭详情">×</button>
       </div>
@@ -70,7 +75,7 @@ export function NodeDetail({ nodeId, onClose }: NodeDetailProps) {
 
       <div
         className="ctree-detail__content"
-        dangerouslySetInnerHTML={{ __html: renderMarkdown(node.content || '暂无文本内容') }}
+        dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
 
       <div className="ctree-detail__relations">
