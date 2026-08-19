@@ -109,8 +109,14 @@ export function TreeCanvas() {
 
   const zoomBy = (factor: number) => {
     setViewBox((current) => {
-      const nextWidth = Math.max(420, current.width * factor);
-      const nextHeight = Math.max(300, current.height * factor);
+      const containerWidth = containerRef.current?.clientWidth ?? 800;
+      const containerHeight = containerRef.current?.clientHeight ?? 500;
+      const minWidth = 160;
+      const minHeight = 120;
+      const maxWidth = Math.max(layout?.width ? layout.width * 3 : 3600, containerWidth * 5);
+      const maxHeight = Math.max(layout?.height ? layout.height * 3 : 1440, containerHeight * 5);
+      const nextWidth = Math.min(maxWidth, Math.max(minWidth, current.width * factor));
+      const nextHeight = Math.min(maxHeight, Math.max(minHeight, current.height * factor));
       const ratioX = (nextWidth - current.width) / 2;
       const ratioY = (nextHeight - current.height) / 2;
       return {
@@ -137,13 +143,19 @@ export function TreeCanvas() {
 
   const onWheel = (event: React.WheelEvent<SVGSVGElement>) => {
     event.preventDefault();
-    const factor = event.deltaY > 0 ? 1.08 : 0.92;
+    const factor = event.deltaY > 0 ? 1.12 : 0.9;
     setViewBox((current) => {
       const rect = containerRef.current?.getBoundingClientRect();
+      const rectWidth = rect?.width ?? 800;
+      const rectHeight = rect?.height ?? 500;
       const pointerX = rect ? ((event.clientX - rect.left) / rect.width) : 0.5;
       const pointerY = rect ? ((event.clientY - rect.top) / rect.height) : 0.5;
-      const nextWidth = Math.max(420, current.width * factor);
-      const nextHeight = Math.max(300, current.height * factor);
+      const minWidth = 160;
+      const minHeight = 120;
+      const maxWidth = Math.max(layout?.width ? layout.width * 3 : 3600, rectWidth * 5);
+      const maxHeight = Math.max(layout?.height ? layout.height * 3 : 1440, rectHeight * 5);
+      const nextWidth = Math.min(maxWidth, Math.max(minWidth, current.width * factor));
+      const nextHeight = Math.min(maxHeight, Math.max(minHeight, current.height * factor));
       const worldX = current.x + pointerX * current.width;
       const worldY = current.y + pointerY * current.height;
 
@@ -195,10 +207,10 @@ export function TreeCanvas() {
   return (
     <div className="ctree-canvas" ref={containerRef}>
       <div className="ctree-canvas__toolbar">
-        <button className="ctree-mini-button" type="button" onClick={() => zoomBy(0.86)} aria-label="缩小" title="缩小">
+        <button className="ctree-mini-button" type="button" onClick={() => zoomBy(1.16)} aria-label="缩小" title="缩小">
           <span>−</span>
         </button>
-        <button className="ctree-mini-button" type="button" onClick={() => zoomBy(1.16)} aria-label="放大" title="放大">
+        <button className="ctree-mini-button" type="button" onClick={() => zoomBy(0.86)} aria-label="放大" title="放大">
           <span>+</span>
         </button>
         <button className="ctree-mini-button" type="button" onClick={resetView} aria-label="适应视图" title="适应视图">

@@ -13,6 +13,39 @@ function getConversationIdFromLocation(): string | null {
   return match?.[1] ?? null;
 }
 
+function isDarkTheme(): boolean {
+  const html = document.documentElement;
+  const body = document.body;
+  const explicitDark = [
+    html,
+    body,
+  ].some((element) => {
+    if (!element) {
+      return false;
+    }
+
+    return element.classList.contains('dark')
+      || element.dataset.theme === 'dark'
+      || element.dataset.colorScheme === 'dark'
+      || element.getAttribute('data-color-scheme') === 'dark';
+  });
+
+  if (explicitDark) {
+    return true;
+  }
+
+  const background = body ? getComputedStyle(body).backgroundColor : '';
+  if (background && background !== 'rgba(0, 0, 0, 0)' && background !== 'transparent') {
+    const match = background.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+      const luminance = (Number(match[1]) * 0.2126 + Number(match[2]) * 0.7152 + Number(match[3]) * 0.0722) / 255;
+      return luminance < 0.32;
+    }
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 function mountUi(): void {
   if (document.getElementById(HOST_ID)) {
     return;
@@ -22,18 +55,23 @@ function mountUi(): void {
   host.id = HOST_ID;
   host.dataset.ctreeHost = 'true';
   const applyTheme = () => {
-    const root = document.documentElement;
-    const isDark = root.classList.contains('dark')
-      || root.dataset.theme === 'dark'
-      || root.dataset.colorScheme === 'dark';
-    host.dataset.theme = isDark ? 'dark' : 'light';
+    host.dataset.theme = isDarkTheme() ? 'dark' : 'light';
   };
   applyTheme();
-  const themeObserver = new MutationObserver(applyTheme);
-  themeObserver.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['class', 'data-theme', 'data-color-scheme'],
+  const themeObserver = new MutationObserver(() => {
+    applyTheme();
   });
+  const themeObserverOptions: MutationObserverInit = {
+    attributes: true,
+    attributeFilter: ['class', 'style', 'data-theme', 'data-color-scheme'],
+  };
+  themeObserver.observe(document.documentElement, themeObserverOptions);
+  if (document.body) {
+    themeObserver.observe(document.body, themeObserverOptions);
+  }
+  const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
+  darkMedia.addEventListener?.('change', applyTheme);
+  window.addEventListener('DOMContentLoaded', applyTheme);
   document.documentElement.appendChild(host);
 
   const shadow = host.attachShadow({ mode: 'open' });
