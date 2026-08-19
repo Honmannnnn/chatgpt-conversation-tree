@@ -11,9 +11,34 @@ interface ViewBox {
   height: number;
 }
 
-function truncate(value: string, length: number): string {
+function measureTextWidth(value: string, fontSize: number): number {
+  let width = 0;
+
+  for (const character of Array.from(value)) {
+    const codePoint = character.codePointAt(0) ?? 0;
+    const isWide = codePoint > 127;
+    width += isWide ? fontSize : fontSize * 0.56;
+  }
+
+  return width;
+}
+
+function truncateToWidth(value: string, maxWidth: number, fontSize: number): string {
   const clean = value.replace(/\s+/g, ' ').trim();
-  return clean.length > length ? `${clean.slice(0, length)}…` : clean;
+  if (measureTextWidth(clean, fontSize) <= maxWidth) {
+    return clean;
+  }
+
+  let result = '';
+  for (const character of Array.from(clean)) {
+    const next = `${result}${character}…`;
+    if (measureTextWidth(next, fontSize) > maxWidth) {
+      break;
+    }
+    result += character;
+  }
+
+  return `${result}…`;
 }
 
 function roleLabel(node: MessageNode): string {
@@ -261,8 +286,8 @@ export function TreeCanvas() {
                 <rect width={layoutNode.width} height={layoutNode.height} rx="9" style={{ '--node-accent': accent } as React.CSSProperties} />
                 <rect className="ctree-node__accent" x="0" y="0" width="3" height={layoutNode.height} rx="1.5" fill={accent} />
                 <text className="ctree-node__role" x="14" y="20">{label}</text>
-                <text className="ctree-node__title" x="14" y="38">{truncate(node.title || content, 24)}</text>
-                <text className="ctree-node__content" x="14" y="55">{truncate(content, 34)}</text>
+                <text className="ctree-node__title" x="14" y="38">{truncateToWidth(node.title || content, layoutNode.width - 28, 12)}</text>
+                <text className="ctree-node__content" x="14" y="55">{truncateToWidth(content, layoutNode.width - 28, 10)}</text>
                 {node.versionLabel ? (
                   <g transform={`translate(${layoutNode.width - 38} 12)`}>
                     <rect width="26" height="17" rx="5" className="ctree-node__version" />
