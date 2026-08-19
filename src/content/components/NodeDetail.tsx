@@ -1,4 +1,5 @@
 import { useConversationTreeStore } from '../store';
+import { selectAndNavigate } from '../navigation';
 
 interface NodeDetailProps {
   nodeId: string;
@@ -23,7 +24,6 @@ function roleText(role: string): string {
 
 export function NodeDetail({ nodeId, onClose }: NodeDetailProps) {
   const graph = useConversationTreeStore((state) => state.graph);
-  const setSelectedNodeId = useConversationTreeStore((state) => state.setSelectedNodeId);
   const node = graph?.nodes[nodeId];
 
   if (!graph || !node) {
@@ -35,12 +35,12 @@ export function NodeDetail({ nodeId, onClose }: NodeDetailProps) {
 
   const jumpToParent = () => {
     if (parent) {
-      setSelectedNodeId(parent.id);
+      void selectAndNavigate(parent.id);
     }
   };
 
   const jumpToChild = (childId: string) => {
-    setSelectedNodeId(childId);
+    void selectAndNavigate(childId);
   };
 
   return (

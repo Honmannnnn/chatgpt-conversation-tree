@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useConversationTreeStore } from '../store';
 import { MessageTypes } from '../../shared/messages';
 import { NodeDetail } from './NodeDetail';
@@ -9,10 +9,21 @@ export function TreePanel() {
   const selectedNodeId = useConversationTreeStore((state) => state.selectedNodeId);
   const searchQuery = useConversationTreeStore((state) => state.searchQuery);
   const isRefreshing = useConversationTreeStore((state) => state.isRefreshing);
+  const notice = useConversationTreeStore((state) => state.notice);
   const setSearchQuery = useConversationTreeStore((state) => state.setSearchQuery);
   const setPanelOpen = useConversationTreeStore((state) => state.setPanelOpen);
   const setSelectedNodeId = useConversationTreeStore((state) => state.setSelectedNodeId);
   const setIsRefreshing = useConversationTreeStore((state) => state.setIsRefreshing);
+  const setNotice = useConversationTreeStore((state) => state.setNotice);
+
+  useEffect(() => {
+    if (!notice) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => setNotice(null), 2600);
+    return () => window.clearTimeout(timer);
+  }, [notice, setNotice]);
 
   const activeCount = graph?.activePath.length ?? 0;
   const versionCount = useMemo(() => {
@@ -125,6 +136,7 @@ export function TreePanel() {
           </div>
         )}
       </div>
+      {notice ? <div className="ctree-toast" role="status">{notice}</div> : null}
     </aside>
   );
 }

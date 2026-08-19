@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildTreeLayout } from '../../core/layout';
 import { useConversationTreeStore } from '../store';
+import { selectAndNavigate } from '../navigation';
 import type { MessageNode } from '../../shared/types';
 
 interface ViewBox {
@@ -51,7 +52,6 @@ export function TreeCanvas() {
   const graph = useConversationTreeStore((state) => state.graph);
   const selectedNodeId = useConversationTreeStore((state) => state.selectedNodeId);
   const searchQuery = useConversationTreeStore((state) => state.searchQuery);
-  const setSelectedNodeId = useConversationTreeStore((state) => state.setSelectedNodeId);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [viewBox, setViewBox] = useState<ViewBox>({ x: 0, y: 0, width: 1200, height: 600 });
   const dragState = useRef<{ startX: number; startY: number; viewX: number; viewY: number } | null>(null);
@@ -237,7 +237,7 @@ export function TreeCanvas() {
                 key={node.id}
                 transform={`translate(${layoutNode.x} ${layoutNode.y})`}
                 className={selected ? 'ctree-node is-selected' : active ? 'ctree-node is-active' : 'ctree-node'}
-                onClick={() => setSelectedNodeId(node.id)}
+                onClick={() => void selectAndNavigate(node.id)}
                 role="treeitem"
                 tabIndex={0}
                 aria-selected={selected}
