@@ -80,6 +80,7 @@ export function TreeCanvas() {
   const roleFilter = useConversationTreeStore((state) => state.roleFilter);
   const activeOnly = useConversationTreeStore((state) => state.activeOnly);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
   const [viewBox, setViewBox] = useState<ViewBox>({ x: 0, y: 0, width: 1200, height: 600 });
   const dragState = useRef<{ startX: number; startY: number; viewX: number; viewY: number } | null>(null);
 
@@ -102,6 +103,43 @@ export function TreeCanvas() {
       width: Math.max(containerRef.current?.clientWidth ?? 800, layout.width),
       height: Math.max(containerRef.current?.clientHeight ?? 500, layout.height),
     });
+  }, [layout]);
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || !layout) {
+      return;
+    }
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const factor = event.deltaY > 0 ? 1.12 : 0.9;
+      setViewBox((current) => {
+        const rect = containerRef.current?.getBoundingClientRect();
+        const rectWidth = rect?.width ?? 800;
+        const rectHeight = rect?.height ?? 500;
+        const pointerX = rect ? ((event.clientX - rect.left) / rect.width) : 0.5;
+        const pointerY = rect ? ((event.clientY - rect.top) / rect.height) : 0.5;
+        const minWidth = 160;
+        const minHeight = 120;
+        const maxWidth = Math.max(layout.width * 3, rectWidth * 5);
+        const maxHeight = Math.max(layout.height * 3, rectHeight * 5);
+        const nextWidth = Math.min(maxWidth, Math.max(minWidth, current.width * factor));
+        const nextHeight = Math.min(maxHeight, Math.max(minHeight, current.height * factor));
+        const worldX = current.x + pointerX * current.width;
+        const worldY = current.y + pointerY * current.height;
+
+        return {
+          x: worldX - pointerX * nextWidth,
+          y: worldY - pointerY * nextHeight,
+          width: nextWidth,
+          height: nextHeight,
+        };
+      });
+    };
+
+    svg.addEventListener('wheel', handleWheel, { passive: false });
+    return () => svg.removeEventListener('wheel', handleWheel);
   }, [layout]);
 
   if (!graph || !layout) {
@@ -166,33 +204,6 @@ export function TreeCanvas() {
     });
   };
 
-  const onWheel = (event: React.WheelEvent<SVGSVGElement>) => {
-    event.preventDefault();
-    const factor = event.deltaY > 0 ? 1.12 : 0.9;
-    setViewBox((current) => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      const rectWidth = rect?.width ?? 800;
-      const rectHeight = rect?.height ?? 500;
-      const pointerX = rect ? ((event.clientX - rect.left) / rect.width) : 0.5;
-      const pointerY = rect ? ((event.clientY - rect.top) / rect.height) : 0.5;
-      const minWidth = 160;
-      const minHeight = 120;
-      const maxWidth = Math.max(layout?.width ? layout.width * 3 : 3600, rectWidth * 5);
-      const maxHeight = Math.max(layout?.height ? layout.height * 3 : 1440, rectHeight * 5);
-      const nextWidth = Math.min(maxWidth, Math.max(minWidth, current.width * factor));
-      const nextHeight = Math.min(maxHeight, Math.max(minHeight, current.height * factor));
-      const worldX = current.x + pointerX * current.width;
-      const worldY = current.y + pointerY * current.height;
-
-      return {
-        x: worldX - pointerX * nextWidth,
-        y: worldY - pointerY * nextHeight,
-        width: nextWidth,
-        height: nextHeight,
-      };
-    });
-  };
-
   const onPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
     dragState.current = {
       startX: event.clientX,
@@ -250,9 +261,9 @@ export function TreeCanvas() {
         </button>
       </div>
       <svg
+        ref={svgRef}
         className="ctree-svg"
         viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
-        onWheel={onWheel}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

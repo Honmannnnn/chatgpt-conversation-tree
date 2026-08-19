@@ -150,7 +150,7 @@ function findBranchControls(element: HTMLElement): BranchControls {
 
 function scrollToMessage(element: HTMLElement): void {
   element.scrollIntoView({
-    behavior: 'smooth',
+    behavior: 'auto',
     block: 'center',
     inline: 'nearest',
   });
@@ -201,7 +201,7 @@ export async function navigateToNode(
     }
 
     button.click();
-    await wait(280);
+    await wait(120);
 
     target = findMessageElement(node.sourceMessageId);
     if (target) {
