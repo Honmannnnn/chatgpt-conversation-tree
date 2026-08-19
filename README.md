@@ -4,7 +4,7 @@
 
 # 🧭 ChatGPT Conversation Tree
 
-[![Version](https://img.shields.io/badge/version-v1.0.7-blue.svg)](https://github.com/honmannnnn/chatgpt-conversation-tree)
+[![Version](https://img.shields.io/badge/version-v1.0.8-blue.svg)](https://github.com/honmannnnn/chatgpt-conversation-tree)
 [![Manifest](https://img.shields.io/badge/manifest-V3-green.svg)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
 [![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge-lightgrey.svg)](https://github.com/honmannnnn/chatgpt-conversation-tree)
 [![Privacy](https://img.shields.io/badge/privacy-100%25%20local-blueviolet.svg)](https://github.com/honmannnnn/chatgpt-conversation-tree)

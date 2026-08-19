@@ -271,7 +271,7 @@ button {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin: 10px 14px 0;
+  margin: 10px 14px 10px;
   min-width: 0;
 }
 
