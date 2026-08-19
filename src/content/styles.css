@@ -50,24 +50,21 @@ button {
   height: 46px;
   display: grid;
   place-items: center;
-  color: #ffffff;
-  background: var(--ctree-accent);
+  color: var(--ctree-text);
+  background: transparent;
   border-radius: 13px;
   cursor: pointer;
-  box-shadow: 0 12px 30px rgba(16, 163, 127, 0.32);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.2);
   transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
 .ctree-float:hover {
   transform: translateY(-2px);
-  background: var(--ctree-accent-strong);
-  box-shadow: 0 16px 34px rgba(16, 163, 127, 0.38);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.26);
 }
 
 .ctree-float.is-active {
-  background: var(--ctree-surface);
-  color: var(--ctree-accent);
-  box-shadow: var(--ctree-shadow);
+  background: transparent;
 }
 
 .ctree-float__mark {
@@ -144,9 +141,8 @@ button {
   flex: 0 0 32px;
   display: grid;
   place-items: center;
-  color: var(--ctree-accent);
-  background: color-mix(in srgb, var(--ctree-accent) 12%, transparent);
-  border-radius: 9px;
+  background: transparent;
+  border-radius: 0;
 }
 
 .ctree-panel__brand h1 {

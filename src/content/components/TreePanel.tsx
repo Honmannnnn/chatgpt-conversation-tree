@@ -5,6 +5,7 @@ import { NodeDetail } from './NodeDetail';
 import { SearchResults } from './SearchResults';
 import { TreeCanvas } from './TreeCanvas';
 import { downloadJson, downloadMarkdown, downloadSvg } from '../../shared/exporters';
+import { LogoMark } from '../../shared/LogoMark';
 import type { MessageRole } from '../../shared/types';
 
 export function TreePanel() {
@@ -77,12 +78,7 @@ export function TreePanel() {
       <header className="ctree-panel__header">
         <div className="ctree-panel__brand">
           <span className="ctree-panel__brand-mark">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-              <circle cx="12" cy="5" r="2.3" fill="currentColor" />
-              <circle cx="5" cy="18" r="2.3" fill="currentColor" />
-              <circle cx="19" cy="18" r="2.3" fill="currentColor" />
-              <path d="M12 7.5v3.8M12 7.5 6.7 15.6M12 7.5l5.3 8.1" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-            </svg>
+            <LogoMark size={32} />
           </span>
           <div>
             <h1>Conversation Tree</h1>

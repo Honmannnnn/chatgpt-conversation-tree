@@ -34,9 +34,8 @@ body {
   flex: 0 0 38px;
   display: grid;
   place-items: center;
-  color: #10a37f;
-  background: #e9f9f4;
-  border-radius: 11px;
+  background: transparent;
+  border-radius: 0;
 }
 
 .popup__header h1 {
@@ -98,9 +97,8 @@ body {
 }
 
 .popup__actions {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
   margin-top: 14px;
 }
 
@@ -113,6 +111,7 @@ body {
 }
 
 .popup__primary {
+  width: 100%;
   color: #ffffff;
   background: #10a37f;
 }
@@ -121,29 +120,94 @@ body {
   background: #0d8a6b;
 }
 
-.popup__secondary {
-  padding: 0 14px;
-  color: #111827;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-}
-
-.popup__secondary:hover {
-  background: #f3f4f6;
-}
-
-.popup__clear {
-  width: 100%;
+.popup__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin-top: 8px;
+}
+
+.popup__ghost {
+  padding: 0;
   color: #6b7280;
   background: transparent;
   border: 0;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.popup__ghost:hover {
+  color: #111827;
+}
+
+.popup__divider {
+  width: 1px;
+  height: 13px;
+  background: #e5e7eb;
+}
+
+.popup__danger:hover {
+  color: #dc2626;
+}
+
+.popup__clear {
+  display: none;
 }
 
 .popup__clear:hover {
+  display: none;
+}
+
+.popup__primary:hover {
+  background: #0d8a6b;
+}
+
+.popup__primary,
+.popup__ghost {
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.popup__primary,
+.popup__ghost {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.popup__primary,
+.popup__ghost {
+  border-radius: 8px;
+}
+
+.popup__primary,
+.popup__ghost {
+  cursor: pointer;
+}
+
+.popup__primary,
+.popup__ghost {
+  border: 0;
+}
+
+.popup__primary {
+  color: #ffffff;
+  background: #10a37f;
+}
+
+.popup__primary:hover {
+  background: #0d8a6b;
+}
+
+.popup__ghost {
+  color: #6b7280;
+  background: transparent;
+}
+
+.popup__ghost:hover {
+  color: #111827;
+}
+
+.popup__danger:hover {
   color: #dc2626;
-  background: #fef2f2;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -158,8 +222,7 @@ body {
   }
 
   .popup__mark {
-    color: #34d399;
-    background: #0f3b31;
+    background: transparent;
   }
 
   .popup__header h1 {
@@ -168,12 +231,11 @@ body {
 
   .popup__header p,
   .popup__status span,
-  .popup__clear {
+  .popup__ghost {
     color: #9ca3af;
   }
 
-  .popup__status,
-  .popup__secondary {
+  .popup__status {
     background: #1f2937;
     border-color: #374151;
   }
@@ -186,16 +248,15 @@ body {
     box-shadow: 0 0 0 4px #123d32;
   }
 
-  .popup__secondary {
+  .popup__ghost:hover {
     color: #f9fafb;
   }
 
-  .popup__secondary:hover {
-    background: #111827;
+  .popup__danger:hover {
+    color: #f87171;
   }
 
-  .popup__clear:hover {
-    color: #f87171;
-    background: #2d1518;
+  .popup__divider {
+    background: #374151;
   }
 }

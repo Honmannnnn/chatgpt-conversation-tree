@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MessageTypes } from '../shared/messages';
 import type { ConversationGraph, ExtensionResponse } from '../shared/types';
+import { LogoMark } from '../shared/LogoMark';
 
 export function Popup() {
   const [graph, setGraph] = useState<ConversationGraph | null>(null);
@@ -35,12 +36,7 @@ export function Popup() {
     <main className="popup">
       <header className="popup__header">
         <div className="popup__mark">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
-            <circle cx="12" cy="5" r="2.4" fill="currentColor" />
-            <circle cx="5" cy="18" r="2.4" fill="currentColor" />
-            <circle cx="19" cy="18" r="2.4" fill="currentColor" />
-            <path d="M12 7.5v4.1M12 7.5 6.5 15.8M12 7.5l5.5 8.3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
+          <LogoMark size={38} />
         </div>
         <div>
           <h1>Conversation Tree</h1>
@@ -60,10 +56,13 @@ export function Popup() {
         <button className="popup__primary" type="button" onClick={togglePanel}>
           {graph ? '显示 / 隐藏树' : '打开树面板'}
         </button>
-        <button className="popup__secondary" type="button" onClick={refresh}>刷新</button>
       </div>
 
-      <button className="popup__clear" type="button" onClick={clearGraph}>清除当前对话缓存</button>
+      <div className="popup__footer">
+        <button className="popup__ghost" type="button" onClick={refresh}>刷新</button>
+        <span className="popup__divider" />
+        <button className="popup__ghost popup__danger" type="button" onClick={clearGraph}>清除缓存</button>
+      </div>
     </main>
   );
 }
