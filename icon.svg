@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="ChatGPT Conversation Tree">
+  <rect width="100" height="100" rx="22" fill="#111827"/>
+  <circle cx="50" cy="22" r="7" fill="#10A37F"/>
+  <circle cx="28" cy="56" r="7" fill="#34D399"/>
+  <circle cx="72" cy="56" r="7" fill="#34D399"/>
+  <circle cx="24" cy="82" r="5" fill="#6EE7B7"/>
+  <circle cx="44" cy="82" r="5" fill="#6EE7B7"/>
+  <circle cx="72" cy="82" r="5" fill="#6EE7B7"/>
+  <path d="M50 29v20M50 29L28 49M50 29l22 20M28 63l-4 14M28 63l16 14M72 63l-14 14M72 63v14" stroke="#9CA3AF" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M50 29v20" stroke="#10A37F" stroke-width="4" stroke-linecap="round"/>
+  <path d="M50 49v0" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+</svg>
