@@ -85,6 +85,21 @@ function findVisibleSiblingElement(graph: ConversationGraph, node: MessageNode):
   return null;
 }
 
+function findVisibleAncestorElement(graph: ConversationGraph, node: MessageNode): { element: HTMLElement; node: MessageNode } | null {
+  let cursorId = node.parentId;
+
+  while (cursorId && graph.nodes[cursorId]) {
+    const ancestor = graph.nodes[cursorId];
+    const element = findMessageElement(ancestor.sourceMessageId);
+    if (element) {
+      return { element, node: ancestor };
+    }
+    cursorId = ancestor.parentId;
+  }
+
+  return null;
+}
+
 interface BranchControls {
   previous: HTMLElement[];
   next: HTMLElement[];
@@ -123,10 +138,35 @@ function controlsFromButtons(buttons: HTMLElement[]): BranchControls {
   return controls;
 }
 
+function ancestorChain(element: HTMLElement): HTMLElement[] {
+  const chain: HTMLElement[] = [];
+  let cursor: HTMLElement | null = element;
+  while (cursor) {
+    chain.push(cursor);
+    cursor = cursor.parentElement;
+  }
+  return chain;
+}
+
+function domDistance(a: HTMLElement, b: HTMLElement): number {
+  const chainA = ancestorChain(a);
+  const chainB = ancestorChain(b);
+  const bIndex = new Map(chainB.map((element, index) => [element, index]));
+
+  for (let indexA = 0; indexA < chainA.length; indexA += 1) {
+    const indexB = bIndex.get(chainA[indexA]);
+    if (indexB !== undefined) {
+      return indexA + indexB;
+    }
+  }
+
+  return Number.POSITIVE_INFINITY;
+}
+
 function findBranchControls(element: HTMLElement): BranchControls {
   let cursor: HTMLElement | null = element;
 
-  for (let depth = 0; cursor && depth < 6; depth += 1) {
+  for (let depth = 0; cursor && depth < 12; depth += 1) {
     const buttons = Array.from(cursor.querySelectorAll<HTMLElement>('button'));
     const controls = controlsFromButtons(buttons);
 
@@ -137,15 +177,16 @@ function findBranchControls(element: HTMLElement): BranchControls {
     cursor = cursor.parentElement;
   }
 
-  const constrainedGlobalControls = controlsFromButtons(
-    Array.from(document.querySelectorAll<HTMLElement>(
-      'button[data-testid*="prev-button"], button[data-testid*="next-button"]',
-    )),
-  );
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>(
+    'button[aria-label="上一回复"], button[aria-label="下一回复"], button[data-testid*="prev-button"], button[data-testid*="next-button"]',
+  ));
 
-  return constrainedGlobalControls.previous.length || constrainedGlobalControls.next.length
-    ? constrainedGlobalControls
-    : { previous: [], next: [] };
+  if (!candidates.length) {
+    return { previous: [], next: [] };
+  }
+
+  const nearest = candidates.sort((a, b) => domDistance(element, a) - domDistance(element, b));
+  return controlsFromButtons(nearest.slice(0, 4));
 }
 
 function scrollToMessage(element: HTMLElement): void {
@@ -178,40 +219,64 @@ export async function navigateToNode(
   }
 
   const visibleSibling = findVisibleSiblingElement(graph, node);
-  if (!visibleSibling) {
-    return { found: false, switched: false };
+  if (visibleSibling) {
+    const siblings = getVersionSiblings(graph, node);
+    const targetIndex = siblings.findIndex((sibling) => sibling.id === node.id);
+    const visibleIndex = siblings.findIndex((sibling) => sibling.id === visibleSibling.node.id);
+
+    if (targetIndex >= 0 && visibleIndex >= 0 && targetIndex !== visibleIndex) {
+      const direction = targetIndex > visibleIndex ? 'next' : 'previous';
+      const maxSteps = Math.min(Math.abs(targetIndex - visibleIndex), 6);
+      let controls = findBranchControls(visibleSibling.element);
+
+      for (let step = 0; step < maxSteps; step += 1) {
+        const button = (direction === 'next' ? controls.next[0] : controls.previous[0]) as HTMLButtonElement | undefined;
+        if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') {
+          break;
+        }
+
+        button.click();
+        await wait(120);
+
+        target = findMessageElement(node.sourceMessageId);
+        if (target) {
+          scrollToMessage(target);
+          return { found: true, switched: true };
+        }
+
+        const nextVisible = findVisibleSiblingElement(graph, node);
+        if (nextVisible) {
+          controls = findBranchControls(nextVisible.element);
+        }
+      }
+    }
   }
 
-  const siblings = getVersionSiblings(graph, node);
-  const targetIndex = siblings.findIndex((sibling) => sibling.id === node.id);
-  const visibleIndex = siblings.findIndex((sibling) => sibling.id === visibleSibling.node.id);
+  const visibleAncestor = findVisibleAncestorElement(graph, node);
+  if (visibleAncestor) {
+    for (const direction of ['next', 'previous'] as const) {
+      let controls = findBranchControls(visibleAncestor.element);
 
-  if (targetIndex < 0 || visibleIndex < 0 || targetIndex === visibleIndex) {
-    return { found: false, switched: false };
-  }
+      for (let step = 0; step < 3; step += 1) {
+        const button = (direction === 'next' ? controls.next[0] : controls.previous[0]) as HTMLButtonElement | undefined;
+        if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') {
+          break;
+        }
 
-  const direction = targetIndex > visibleIndex ? 'next' : 'previous';
-  const maxSteps = Math.min(Math.abs(targetIndex - visibleIndex), 6);
-  let controls = findBranchControls(visibleSibling.element);
+        button.click();
+        await wait(120);
 
-  for (let step = 0; step < maxSteps; step += 1) {
-    const button = (direction === 'next' ? controls.next[0] : controls.previous[0]) as HTMLButtonElement | undefined;
-    if (!button || button.disabled || button.getAttribute('aria-disabled') === 'true') {
-      break;
-    }
+        target = findMessageElement(node.sourceMessageId);
+        if (target) {
+          scrollToMessage(target);
+          return { found: true, switched: true };
+        }
 
-    button.click();
-    await wait(120);
-
-    target = findMessageElement(node.sourceMessageId);
-    if (target) {
-      scrollToMessage(target);
-      return { found: true, switched: true };
-    }
-
-    const nextVisible = findVisibleSiblingElement(graph, node);
-    if (nextVisible) {
-      controls = findBranchControls(nextVisible.element);
+        const nextVisible = findVisibleSiblingElement(graph, node);
+        if (nextVisible) {
+          controls = findBranchControls(nextVisible.element);
+        }
+      }
     }
   }
 
