@@ -1,0 +1,146 @@
+:root {
+  color: #111827;
+  background: #f9fafb;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 328px;
+  min-height: 236px;
+  margin: 0;
+  background: #f9fafb;
+}
+
+.popup {
+  padding: 18px;
+}
+
+.popup__header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.popup__mark {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  color: #10a37f;
+  background: #e9f9f4;
+  border-radius: 11px;
+}
+
+.popup__header h1 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.popup__header p {
+  margin: 3px 0 0;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.popup__status {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.popup__status-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: #9ca3af;
+}
+
+.popup__status-dot[data-state="ready"] {
+  background: #10a37f;
+  box-shadow: 0 0 0 4px #e9f9f4;
+}
+
+.popup__status div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.popup__status strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.popup__status span {
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.popup__actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.popup button {
+  height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.popup__primary {
+  color: #ffffff;
+  background: #10a37f;
+}
+
+.popup__primary:hover {
+  background: #0d8a6b;
+}
+
+.popup__secondary {
+  padding: 0 14px;
+  color: #111827;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.popup__secondary:hover {
+  background: #f3f4f6;
+}
+
+.popup__clear {
+  width: 100%;
+  margin-top: 8px;
+  color: #6b7280;
+  background: transparent;
+  border: 0;
+  font-weight: 500;
+}
+
+.popup__clear:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}
