@@ -3,6 +3,7 @@ import { buildTreeLayout } from '../../core/layout';
 import { useConversationTreeStore } from '../store';
 import { selectAndNavigate } from '../navigation';
 import type { MessageNode } from '../../shared/types';
+import { markdownToPlainText } from '../../shared/markdown';
 
 interface ViewBox {
   x: number;
@@ -282,7 +283,8 @@ export function TreeCanvas() {
             const active = node.active;
             const accent = nodeAccent(node);
             const label = roleLabel(node);
-            const content = node.content.replace(/\s+/g, ' ').trim();
+            const content = markdownToPlainText(node.content);
+            const title = markdownToPlainText(node.title || content);
 
             return (
               <g
@@ -297,7 +299,7 @@ export function TreeCanvas() {
                 <rect width={layoutNode.width} height={layoutNode.height} rx="9" style={{ '--node-accent': accent } as React.CSSProperties} />
                 <rect className="ctree-node__accent" x="0" y="0" width="3" height={layoutNode.height} rx="1.5" fill={accent} />
                 <text className="ctree-node__role" x="14" y="20">{label}</text>
-                <text className="ctree-node__title" x="14" y="38">{truncateToWidth(node.title || content, layoutNode.width - 28, 12)}</text>
+                <text className="ctree-node__title" x="14" y="38">{truncateToWidth(title, layoutNode.width - 28, 12)}</text>
                 <text className="ctree-node__content" x="14" y="55">{truncateToWidth(content, layoutNode.width - 28, 10)}</text>
                 {node.versionLabel ? (
                   <g transform={`translate(${layoutNode.width - 38} 12)`}>

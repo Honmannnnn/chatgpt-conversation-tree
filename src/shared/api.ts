@@ -1,4 +1,5 @@
 import type { ConversationGraph, MessageNode, MessageRole } from './types';
+import { markdownToPlainText } from './markdown';
 
 type JsonRecord = Record<string, any>;
 
@@ -170,6 +171,7 @@ export function parseConversationApiResponse(payload: unknown): ConversationGrap
 
     const role = roleFromAuthor(message.author);
     const content = extractContent(message);
+    const plainContent = markdownToPlainText(content);
     const parentId = typeof rawNode.parent === 'string' ? rawNode.parent : null;
     const children = Array.isArray(rawNode.children)
       ? rawNode.children.filter((child): child is string => typeof child === 'string')
@@ -180,7 +182,7 @@ export function parseConversationApiResponse(payload: unknown): ConversationGrap
       sourceMessageId: messageId,
       role,
       content,
-      title: `${role === 'user' ? '提问' : role === 'assistant' ? '回复' : role} · ${content.slice(0, 48) || messageId}`,
+      title: `${role === 'user' ? '提问' : role === 'assistant' ? '回复' : role} · ${plainContent.slice(0, 48) || messageId}`,
       parentId,
       children,
       createdAt: typeof message.create_time === 'number' ? message.create_time : null,

@@ -1,6 +1,7 @@
 import { useConversationTreeStore } from '../store';
 import { selectAndNavigate } from '../navigation';
 import { copyText } from '../../shared/exporters';
+import { markdownToPlainText, renderMarkdown } from '../../shared/markdown';
 
 interface NodeDetailProps {
   nodeId: string;
@@ -55,7 +56,7 @@ export function NodeDetail({ nodeId, onClose }: NodeDetailProps) {
       <div className="ctree-detail__header">
         <div>
           <span className={`ctree-detail__role is-${node.role}`}>{roleText(node.role)}</span>
-          <h2>{node.title}</h2>
+          <h2>{markdownToPlainText(node.title)}</h2>
         </div>
         <button className="ctree-icon-button" type="button" onClick={onClose} aria-label="关闭详情" title="关闭详情">×</button>
       </div>
@@ -67,9 +68,10 @@ export function NodeDetail({ nodeId, onClose }: NodeDetailProps) {
         <button className="ctree-copy-button" type="button" onClick={copyContent}>复制内容</button>
       </div>
 
-      <div className="ctree-detail__content">
-        {node.content || '暂无文本内容'}
-      </div>
+      <div
+        className="ctree-detail__content"
+        dangerouslySetInnerHTML={{ __html: renderMarkdown(node.content || '暂无文本内容') }}
+      />
 
       <div className="ctree-detail__relations">
         {parent ? (

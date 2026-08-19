@@ -8,13 +8,15 @@ export async function selectAndNavigate(nodeId: string): Promise<void> {
   }
 
   useConversationTreeStore.getState().setSelectedNodeId(nodeId);
-  const result = await navigateToNode(graph, nodeId);
+  window.setTimeout(async () => {
+    const result = await navigateToNode(graph, nodeId);
 
-  if (result.found && result.switched) {
-    useConversationTreeStore.getState().setNotice('已切换到目标版本并定位');
-  } else if (result.found) {
-    useConversationTreeStore.getState().setNotice('已定位到消息');
-  } else {
-    useConversationTreeStore.getState().setNotice('目标消息尚未出现在页面中，可稍后重试或刷新');
-  }
+    if (result.found && result.switched) {
+      useConversationTreeStore.getState().setNotice('已切换到目标版本并定位');
+    } else if (result.found) {
+      useConversationTreeStore.getState().setNotice('已定位到消息');
+    } else {
+      useConversationTreeStore.getState().setNotice('目标消息尚未出现在页面中，可稍后重试或刷新');
+    }
+  }, 0);
 }

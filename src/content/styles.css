@@ -783,8 +783,66 @@ button {
   border-radius: 9px;
   font-size: 12px;
   line-height: 1.55;
-  white-space: pre-wrap;
+  white-space: normal;
   overflow-wrap: anywhere;
+}
+
+.ctree-detail__content > :first-child {
+  margin-top: 0;
+}
+
+.ctree-detail__content > :last-child {
+  margin-bottom: 0;
+}
+
+.ctree-detail__content p,
+.ctree-detail__content ul,
+.ctree-detail__content ol {
+  margin: 0 0 8px;
+}
+
+.ctree-detail__content ul,
+.ctree-detail__content ol {
+  padding-left: 18px;
+}
+
+.ctree-detail__content code {
+  padding: 1px 4px;
+  color: var(--ctree-text);
+  background: var(--ctree-surface-2);
+  border: 1px solid var(--ctree-border);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+}
+
+.ctree-detail__content pre {
+  margin: 0 0 8px;
+  padding: 9px;
+  overflow: auto;
+  color: var(--ctree-text);
+  background: var(--ctree-surface-2);
+  border: 1px solid var(--ctree-border);
+  border-radius: 7px;
+}
+
+.ctree-detail__content pre code {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.ctree-detail__content a {
+  color: var(--ctree-accent);
+  text-decoration: underline;
+}
+
+.ctree-detail__content h1,
+.ctree-detail__content h2,
+.ctree-detail__content h3 {
+  margin: 10px 0 6px;
+  font-size: 13px;
+  line-height: 1.3;
 }
 
 .ctree-detail__relations {

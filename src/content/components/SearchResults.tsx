@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { selectAndNavigate } from '../navigation';
 import { useConversationTreeStore } from '../store';
 import type { MessageNode } from '../../shared/types';
+import { markdownToPlainText } from '../../shared/markdown';
 
 function roleLabel(node: MessageNode): string {
   if (node.role === 'assistant') {
@@ -20,7 +21,7 @@ function roleLabel(node: MessageNode): string {
 }
 
 function snippet(node: MessageNode): string {
-  return node.content.replace(/\s+/g, ' ').trim().slice(0, 80);
+  return markdownToPlainText(node.content).slice(0, 80);
 }
 
 export function SearchResults() {
