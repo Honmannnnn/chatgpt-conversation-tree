@@ -188,8 +188,8 @@ export function GitGraphView() {
                   )}
 
                   {row.node.versionLabel ? (
-                    <span className="ctree-git-card__version">
-                      {row.node.versionLabel}
+                    <span className="ctree-git-card__version" title={row.node.role === 'assistant' ? 'A/B 对比回复版本' : '编辑版本'}>
+                      {row.node.role === 'assistant' ? `对比 ${row.node.versionLabel}` : `版本 ${row.node.versionLabel}`}
                     </span>
                   ) : null}
 
