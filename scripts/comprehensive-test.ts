@@ -220,4 +220,27 @@ if (parsedJson.conversationId !== 'stress-1000') {
 
 console.log(`✓ SVG (${(svgOutput.length / 1024).toFixed(1)} KB), Markdown (${(mdOutput.length / 1024).toFixed(1)} KB), and JSON exports verified safe.\n`);
 
+// -------------------------------------------------------------
+// Test 6: Git-Style Branch Graph Layout Verification
+// -------------------------------------------------------------
+console.log('--- Test 6: Git Branch Graph Layout Verification ---');
+import { computeGitGraphLayout } from '../src/core/gitGraphLayout';
+
+const gitLayoutFork = computeGitGraphLayout(forkGraph);
+if (gitLayoutFork.rows.length !== 4) {
+  throw new Error(`Git layout rows count mismatch. Expected 4, got ${gitLayoutFork.rows.length}`);
+}
+if (gitLayoutFork.totalLanes < 2) {
+  throw new Error(`Git layout should have at least 2 lanes for fork sample, got ${gitLayoutFork.totalLanes}`);
+}
+if (gitLayoutFork.segments.length < 3) {
+  throw new Error(`Git layout segments missing. Got ${gitLayoutFork.segments.length}`);
+}
+
+const startGitStress = performance.now();
+const gitLayoutStress = computeGitGraphLayout(largeGraph);
+const gitTime = performance.now() - startGitStress;
+
+console.log(`✓ Git Graph layout computed for 1000+ nodes in ${gitTime.toFixed(2)}ms (${gitLayoutStress.rows.length} rows, ${gitLayoutStress.totalLanes} lanes, ${gitLayoutStress.segments.length} rails).\n`);
+
 console.log('=== ALL COMPREHENSIVE TESTS PASSED SUCCESSFULLY! ===');

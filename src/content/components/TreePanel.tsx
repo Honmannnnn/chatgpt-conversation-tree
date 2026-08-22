@@ -4,6 +4,7 @@ import { MessageTypes } from '../../shared/messages';
 import { NodeDetail } from './NodeDetail';
 import { SearchResults } from './SearchResults';
 import { TreeCanvas } from './TreeCanvas';
+import { GitGraphView } from './GitGraphView';
 import { downloadJson, downloadMarkdown, downloadSvg } from '../../shared/exporters';
 import { LogoMark } from '../../shared/LogoMark';
 import type { MessageRole } from '../../shared/types';
@@ -16,6 +17,8 @@ export function TreePanel() {
   const notice = useConversationTreeStore((state) => state.notice);
   const roleFilter = useConversationTreeStore((state) => state.roleFilter);
   const activeOnly = useConversationTreeStore((state) => state.activeOnly);
+  const viewMode = useConversationTreeStore((state) => state.viewMode);
+  const setViewMode = useConversationTreeStore((state) => state.setViewMode);
   const setSearchQuery = useConversationTreeStore((state) => state.setSearchQuery);
   const setPanelOpen = useConversationTreeStore((state) => state.setPanelOpen);
   const setSelectedNodeId = useConversationTreeStore((state) => state.setSelectedNodeId);
@@ -173,6 +176,24 @@ export function TreePanel() {
           <span>仅活跃路径</span>
         </label>
         <div className="ctree-toolbar__spacer" />
+        <div className="ctree-view-toggle">
+          <button
+            type="button"
+            className={`ctree-view-tab ${viewMode === 'git' ? 'is-active' : ''}`}
+            onClick={() => setViewMode('git')}
+            title="Git 分支视图 (清晰垂直时间线)"
+          >
+            Git 分支
+          </button>
+          <button
+            type="button"
+            className={`ctree-view-tab ${viewMode === 'tree' ? 'is-active' : ''}`}
+            onClick={() => setViewMode('tree')}
+            title="拓扑树视图 (全景画布)"
+          >
+            全景拓扑
+          </button>
+        </div>
         <div className="ctree-export-group">
           <button className="ctree-export-button" type="button" onClick={() => exportGraph('json')} title="导出 JSON" aria-label="导出 JSON">JSON</button>
           <button className="ctree-export-button" type="button" onClick={() => exportGraph('markdown')} title="导出 Markdown" aria-label="导出 Markdown">MD</button>
@@ -186,14 +207,14 @@ export function TreePanel() {
         {graph ? (
           <>
             <div className="ctree-canvas-wrap">
-              <TreeCanvas />
+              {viewMode === 'git' ? <GitGraphView /> : <TreeCanvas />}
             </div>
             {selectedNodeId ? (
               <NodeDetail nodeId={selectedNodeId} onClose={clearSelection} />
             ) : (
               <div className="ctree-empty-hint">
                 <span>选择一个节点查看完整内容</span>
-                <small>点击树中任意消息节点</small>
+                <small>点击列表中任意消息卡片或节点</small>
               </div>
             )}
           </>

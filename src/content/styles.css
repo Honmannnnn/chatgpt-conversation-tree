@@ -382,6 +382,43 @@ button {
   border-radius: 8px;
 }
 
+.ctree-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  background: var(--ctree-surface-2);
+  border: 1px solid var(--ctree-border);
+  border-radius: 8px;
+  gap: 2px;
+}
+
+.ctree-view-tab {
+  height: 24px;
+  padding: 0 8px;
+  display: inline-grid;
+  place-items: center;
+  color: var(--ctree-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+  white-space: nowrap;
+}
+
+.ctree-view-tab:hover {
+  color: var(--ctree-text);
+}
+
+.ctree-view-tab.is-active {
+  color: var(--ctree-text);
+  background: var(--ctree-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 .ctree-export-button {
   height: 24px;
   min-width: 32px;
@@ -520,6 +557,178 @@ button {
   min-height: 220px;
   flex: 1 1 auto;
   border-bottom: 1px solid var(--ctree-border);
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Git Branch Graph View (Vertical Natural Flow)
+   ========================================================================== */
+
+.ctree-git-graph {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px 24px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--ctree-muted) 10%, transparent) 1px, transparent 0) 0 0 / 20px 20px,
+    var(--ctree-bg);
+}
+
+.ctree-git-graph::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ctree-git-graph::-webkit-scrollbar-thumb {
+  background: var(--ctree-border);
+  border-radius: 4px;
+}
+
+.ctree-git-graph__inner {
+  position: relative;
+  width: 100%;
+}
+
+.ctree-git-rails {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.ctree-git-dot {
+  cursor: pointer;
+  pointer-events: all;
+  transition: transform 120ms ease;
+}
+
+.ctree-git-dot:hover {
+  transform: scale(1.15);
+}
+
+.ctree-git-cards {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.ctree-git-card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 12px 8px 14px;
+  background: var(--ctree-surface);
+  border: 1px solid var(--ctree-border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease, opacity 140ms ease;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.ctree-git-card:hover {
+  border-color: color-mix(in srgb, var(--ctree-accent) 60%, var(--ctree-border));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.ctree-git-card.is-active {
+  background: var(--ctree-surface);
+  border-color: var(--ctree-accent);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--ctree-accent) 18%, transparent);
+}
+
+.ctree-git-card.is-selected {
+  border-color: var(--ctree-accent);
+  border-width: 1.6px;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--ctree-accent) 26%, transparent);
+}
+
+.ctree-git-card.is-muted {
+  opacity: 0.28;
+}
+
+.ctree-git-card__stripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3.5px;
+  border-top-left-radius: 9px;
+  border-bottom-left-radius: 9px;
+}
+
+.ctree-git-card__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.ctree-git-card__role {
+  font-weight: 700;
+  font-size: 9.5px;
+  text-transform: uppercase;
+}
+
+.ctree-git-card__branch-tag {
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  border: 0.8px solid currentColor;
+}
+
+.ctree-git-card__main-tag {
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--ctree-accent) 14%, transparent);
+  color: var(--ctree-accent);
+}
+
+.ctree-git-card__version {
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 8.5px;
+  font-weight: 600;
+  background: var(--ctree-surface-2);
+  color: var(--ctree-muted);
+}
+
+.ctree-git-card__fork-count {
+  margin-left: auto;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 8.5px;
+  font-weight: 700;
+  background: rgba(217, 119, 6, 0.14);
+  color: #d97706;
+}
+
+.ctree-git-card__title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ctree-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ctree-git-card__snippet {
+  font-size: 10px;
+  color: var(--ctree-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 .ctree-canvas {
