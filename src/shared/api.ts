@@ -219,18 +219,22 @@ export function parseConversationApiResponse(payload: unknown): ConversationGrap
       ? rawNode.children.filter((child): child is string => typeof child === 'string')
       : [];
 
+    const title = `${role === 'user' ? '提问' : role === 'assistant' ? '回复' : role} · ${plainContent.slice(0, 48) || messageId}`;
+    const searchText = `${role} ${title} ${plainContent} ${messageId}`.toLowerCase();
+
     nodes.push({
       id: nodeId,
       sourceMessageId: messageId,
       role,
       content,
       plainContent,
-      title: `${role === 'user' ? '提问' : role === 'assistant' ? '回复' : role} · ${plainContent.slice(0, 48) || messageId}`,
+      title,
       parentId,
       children,
       createdAt: typeof message.create_time === 'number' ? message.create_time : null,
       modelSlug: typeof message.metadata?.model_slug === 'string' ? message.metadata.model_slug : undefined,
       active: false,
+      searchText,
     });
   }
 
@@ -270,6 +274,22 @@ export function parseConversationApiResponse(payload: unknown): ConversationGrap
     cursorId = node.parentId;
   }
 
+  const parentConversationId = typeof payload.parent_conversation_id === 'string'
+    ? payload.parent_conversation_id
+    : typeof payload.forked_from_id === 'string'
+      ? payload.forked_from_id
+      : typeof payload.metadata?.parent_conversation_id === 'string'
+        ? payload.metadata.parent_conversation_id
+        : null;
+
+  const forkedFromMessageId = typeof payload.forked_from_message_id === 'string'
+    ? payload.forked_from_message_id
+    : typeof payload.metadata?.forked_from_message_id === 'string'
+      ? payload.metadata.forked_from_message_id
+      : null;
+
+  const isForked = Boolean(parentConversationId || forkedFromMessageId || payload.is_forked);
+
   const graph: ConversationGraph = {
     conversationId,
     title,
@@ -278,6 +298,9 @@ export function parseConversationApiResponse(payload: unknown): ConversationGrap
     nodes: Object.fromEntries(nodes.map((node) => [node.id, node])),
     activePath,
     capturedAt: Date.now(),
+    parentConversationId,
+    isForked,
+    forkedFromMessageId,
   };
 
   return graph;

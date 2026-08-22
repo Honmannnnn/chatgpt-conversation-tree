@@ -152,7 +152,7 @@ export function TreeCanvas() {
   const visibleNodeIds = new Set<string>();
 
   for (const node of layout.nodes) {
-    const matchesQuery = !query || `${node.node.title} ${node.node.content}`.toLowerCase().includes(query);
+    const matchesQuery = !query || (node.node.searchText ?? `${node.node.title} ${node.node.plainContent}`).includes(query);
     const matchesRole = roleFilter === 'all' || node.node.role === roleFilter;
     const matchesActive = !activeOnly || node.node.active;
 

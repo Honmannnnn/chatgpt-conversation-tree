@@ -14,6 +14,7 @@ export interface MessageNode {
   active: boolean;
   versionGroupId?: string;
   versionLabel?: string;
+  searchText?: string;
 }
 
 export interface ConversationGraph {
@@ -24,6 +25,9 @@ export interface ConversationGraph {
   nodes: Record<string, MessageNode>;
   activePath: string[];
   capturedAt: number;
+  parentConversationId?: string | null;
+  isForked?: boolean;
+  forkedFromMessageId?: string | null;
 }
 
 export interface TreeLayoutNode {

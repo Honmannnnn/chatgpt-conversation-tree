@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "smoke": "tsx scripts/smoke-parser.ts",
-    "check": "tsc --noEmit && tsx scripts/smoke-parser.ts",
+    "test:search": "tsx scripts/test-search.ts",
+    "check": "tsc --noEmit && tsx scripts/smoke-parser.ts && tsx scripts/test-search.ts",
     "release": "pnpm build && node scripts/release.mjs"
   },
   "dependencies": {

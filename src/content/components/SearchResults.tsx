@@ -34,7 +34,7 @@ export function SearchResults() {
 
     const query = searchQuery.trim().toLowerCase();
     return Object.values(graph.nodes)
-      .filter((node) => `${node.title} ${node.content}`.toLowerCase().includes(query))
+      .filter((node) => (node.searchText ?? `${node.title} ${node.plainContent}`).includes(query))
       .slice(0, 12);
   }, [graph, searchQuery]);
 
