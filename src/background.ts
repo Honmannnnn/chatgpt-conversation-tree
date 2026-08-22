@@ -46,6 +46,86 @@ async function pruneOldGraphs(): Promise<void> {
   await chrome.storage.local.remove(keysToRemove);
 }
 
+function aggregateConversationGraphs(
+  targetId: string,
+  allData: Record<string, any>,
+): ConversationGraph | null {
+  const target = allData[graphKey(targetId)] as ConversationGraph | undefined;
+  if (!target) {
+    return null;
+  }
+
+  // Find root conversation ID by walking up parentConversationId
+  let rootId = targetId;
+  const visited = new Set<string>();
+  while (rootId && !visited.has(rootId)) {
+    visited.add(rootId);
+    const curr = allData[graphKey(rootId)] as ConversationGraph | undefined;
+    if (curr?.parentConversationId && allData[graphKey(curr.parentConversationId)]) {
+      rootId = curr.parentConversationId;
+    } else {
+      break;
+    }
+  }
+
+  // Collect all graphs belonging to rootId's family tree
+  const familyGraphs: ConversationGraph[] = [];
+  for (const [key, val] of Object.entries(allData)) {
+    if (!key.startsWith(GRAPH_PREFIX) || !val || typeof val !== 'object') {
+      continue;
+    }
+
+    const g = val as ConversationGraph;
+    let currId: string | null | undefined = g.conversationId;
+    const pathVisited = new Set<string>();
+    let belongs = false;
+
+    while (currId && !pathVisited.has(currId)) {
+      if (currId === rootId) {
+        belongs = true;
+        break;
+      }
+      pathVisited.add(currId);
+      currId = (allData[graphKey(currId)] as ConversationGraph | undefined)?.parentConversationId;
+    }
+
+    if (belongs) {
+      familyGraphs.push(g);
+    }
+  }
+
+  if (familyGraphs.length <= 1) {
+    return target;
+  }
+
+  // Merge all nodes into a unified super-graph
+  const mergedNodes: Record<string, any> = {};
+  for (const g of familyGraphs) {
+    for (const [nodeId, node] of Object.entries(g.nodes)) {
+      if (!mergedNodes[nodeId]) {
+        mergedNodes[nodeId] = {
+          ...node,
+          children: [...node.children],
+          active: target.activePath.includes(nodeId),
+        };
+      } else {
+        const existing = mergedNodes[nodeId];
+        const combinedChildren = Array.from(new Set([...existing.children, ...node.children]));
+        mergedNodes[nodeId] = {
+          ...existing,
+          children: combinedChildren,
+          active: target.activePath.includes(nodeId) || existing.active,
+        };
+      }
+    }
+  }
+
+  return {
+    ...target,
+    nodes: mergedNodes,
+  };
+}
+
 async function handleMessage(
   message: ExtensionRequest,
 ): Promise<ExtensionResponse> {
@@ -75,8 +155,9 @@ async function handleMessage(
         return respond(null);
       }
 
-      const result = await chrome.storage.local.get(graphKey(conversationId));
-      return respond(result[graphKey(conversationId)] ?? null);
+      const all = await chrome.storage.local.get(null);
+      const aggregated = aggregateConversationGraphs(conversationId, all);
+      return respond(aggregated ?? all[graphKey(conversationId)] ?? null);
     }
 
     case MessageTypes.ClearGraph: {
