@@ -634,6 +634,23 @@ button {
   line-height: 1.2;
 }
 
+.ctree-node.is-mainline rect:first-child {
+  stroke-width: 1.4;
+  stroke: color-mix(in srgb, var(--ctree-accent) 60%, var(--ctree-border));
+}
+
+.ctree-node.is-branch-point rect:first-child {
+  stroke: #d97706;
+  stroke-width: 1.5;
+  filter: drop-shadow(0 4px 10px rgba(217, 119, 6, 0.14));
+}
+
+.ctree-node.is-branch-point.is-active rect:first-child {
+  stroke: var(--ctree-accent);
+  stroke-width: 2;
+  filter: drop-shadow(0 4px 12px rgba(16, 163, 127, 0.22));
+}
+
 .ctree-node__version {
   fill: var(--ctree-surface-2);
   stroke: var(--ctree-border);
@@ -645,6 +662,40 @@ button {
   font-size: 9px;
   font-weight: 700;
   text-anchor: middle;
+}
+
+.ctree-branch-toggle {
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+
+.ctree-branch-toggle:hover {
+  opacity: 0.9;
+  transform: scale(1.04);
+}
+
+.ctree-branch-badge.is-collapsed {
+  fill: rgba(217, 119, 6, 0.14);
+  stroke: #d97706;
+  stroke-width: 0.9;
+}
+
+.ctree-branch-badge.is-collapsed + .ctree-branch-badge-text {
+  fill: #d97706;
+  font-weight: 700;
+  font-size: 9px;
+}
+
+.ctree-branch-badge.is-expanded {
+  fill: var(--ctree-surface-2);
+  stroke: var(--ctree-border);
+  stroke-width: 0.8;
+}
+
+.ctree-branch-badge.is-expanded + .ctree-branch-badge-text {
+  fill: var(--ctree-muted);
+  font-weight: 600;
+  font-size: 8.5px;
 }
 
 .ctree-empty-hint {

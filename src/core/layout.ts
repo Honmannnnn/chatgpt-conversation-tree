@@ -2,19 +2,36 @@ import type { ConversationGraph, TreeLayout, TreeLayoutEdge, TreeLayoutNode } fr
 
 const NODE_WIDTH = 236;
 const NODE_HEIGHT = 78;
-const HORIZONTAL_GAP = 28;
-const VERTICAL_GAP = 48;
+const HORIZONTAL_GAP = 36;
+const VERTICAL_GAP = 52;
 
 interface LayoutContext {
   graph: ConversationGraph;
+  activeSet: Set<string>;
+  collapsed: Record<string, boolean>;
   positions: Map<string, { x: number; y: number }>;
   subtreeWidth: Map<string, number>;
   visited: Set<string>;
 }
 
-function measureSubtree(ctx: LayoutContext, nodeId: string): number {
+function getVisibleChildren(ctx: LayoutContext, nodeId: string): string[] {
   const node = ctx.graph.nodes[nodeId];
-  const children = node?.children ?? [];
+  if (!node || node.children.length === 0) {
+    return [];
+  }
+
+  const hasBranches = node.children.length > 1;
+  const isCollapsed = ctx.collapsed[nodeId] ?? hasBranches;
+  if (isCollapsed) {
+    const activeChild = node.children.find((childId) => ctx.activeSet.has(childId)) || node.children[0];
+    return activeChild ? [activeChild] : [];
+  }
+
+  return node.children;
+}
+
+function measureSubtree(ctx: LayoutContext, nodeId: string): number {
+  const children = getVisibleChildren(ctx, nodeId);
   const width = children.reduce(
     (sum, childId) => sum + measureSubtree(ctx, childId),
     0,
@@ -31,8 +48,7 @@ function placeSubtree(ctx: LayoutContext, nodeId: string, left: number, depth: n
   }
 
   ctx.visited.add(nodeId);
-  const node = ctx.graph.nodes[nodeId];
-  const children = node?.children ?? [];
+  const children = getVisibleChildren(ctx, nodeId);
   const ownWidth = ctx.subtreeWidth.get(nodeId) ?? NODE_WIDTH;
   let cursor = left;
 
@@ -42,13 +58,22 @@ function placeSubtree(ctx: LayoutContext, nodeId: string, left: number, depth: n
     cursor += childWidth + HORIZONTAL_GAP;
   }
 
-  const childCenters = children.map((childId) => ctx.positions.get(childId)?.x ?? cursor);
-  const center = childCenters.length
-    ? (Math.min(...childCenters) + Math.max(...childCenters)) / 2
-    : left + ownWidth / 2;
+  const activeChildId = children.find((childId) => ctx.activeSet.has(childId));
+  const activeChildPos = activeChildId ? ctx.positions.get(activeChildId) : null;
+
+  let nodeX: number;
+  if (activeChildPos) {
+    nodeX = activeChildPos.x;
+  } else if (children.length > 0) {
+    const childCenters = children.map((childId) => (ctx.positions.get(childId)?.x ?? cursor) + NODE_WIDTH / 2);
+    const center = (Math.min(...childCenters) + Math.max(...childCenters)) / 2;
+    nodeX = center - NODE_WIDTH / 2;
+  } else {
+    nodeX = left + ownWidth / 2 - NODE_WIDTH / 2;
+  }
 
   ctx.positions.set(nodeId, {
-    x: center - NODE_WIDTH / 2,
+    x: nodeX,
     y: depth * (NODE_HEIGHT + VERTICAL_GAP),
   });
 }
@@ -57,7 +82,7 @@ function getRootIds(graph: ConversationGraph): string[] {
   const nodes = Object.values(graph.nodes);
   const childIds = new Set(nodes.flatMap((node) => node.children));
   const roots = nodes
-    .filter((node) => !node.parentId || !childIds.has(node.id))
+    .filter((node) => !node.parentId || (!childIds.has(node.id) && !node.parentId))
     .map((node) => node.id);
 
   if (roots.length > 0) {
@@ -67,7 +92,7 @@ function getRootIds(graph: ConversationGraph): string[] {
   return nodes.slice(0, 1).map((node) => node.id);
 }
 
-function edgePath(
+export function orthogonalEdgePath(
   source: { x: number; y: number; width: number; height: number },
   target: { x: number; y: number; width: number; height: number },
 ): string {
@@ -75,81 +100,89 @@ function edgePath(
   const y1 = source.y + source.height;
   const x2 = target.x + target.width / 2;
   const y2 = target.y;
-  const offset = Math.max(24, Math.abs(x2 - x1) * 0.48);
-  return `M ${x1} ${y1} C ${x1} ${y1 + offset}, ${x2} ${y2 - offset}, ${x2} ${y2}`;
+
+  if (Math.abs(x1 - x2) < 1) {
+    return `M ${x1} ${y1} L ${x2} ${y2}`;
+  }
+
+  const midY = y1 + (y2 - y1) / 2;
+  return `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
 }
 
-export function buildTreeLayout(graph: ConversationGraph): TreeLayout {
+export function buildTreeLayout(
+  graph: ConversationGraph,
+  collapsed: Record<string, boolean> = {},
+): TreeLayout {
+  const activeSet = new Set(graph.activePath);
   const ctx: LayoutContext = {
     graph,
+    activeSet,
+    collapsed,
     positions: new Map(),
     subtreeWidth: new Map(),
     visited: new Set(),
   };
 
   const roots = getRootIds(graph);
-  const rootsTotalWidth = roots.reduce((sum, rootId) => sum + measureSubtree(ctx, rootId), 0);
   const horizontalMargin = 72;
   let cursor = horizontalMargin;
 
   for (const rootId of roots) {
-    const width = ctx.subtreeWidth.get(rootId) ?? NODE_WIDTH;
+    const width = ctx.subtreeWidth.get(rootId) ?? measureSubtree(ctx, rootId);
     placeSubtree(ctx, rootId, cursor, 0);
     cursor += width + HORIZONTAL_GAP * 1.6;
   }
 
-  const nodes: TreeLayoutNode[] = graph.nodes && Object.keys(graph.nodes).length
-    ? Object.entries(graph.nodes).map(([id, node]) => {
-        const position = ctx.positions.get(id) ?? { x: 0, y: 0 };
-        return {
-          id,
-          x: position.x,
-          y: position.y,
-          width: NODE_WIDTH,
-          height: NODE_HEIGHT,
-          node,
-        };
-      })
-    : [];
-
+  const nodes: TreeLayoutNode[] = [];
   const edges: TreeLayoutEdge[] = [];
 
-  for (const node of Object.values(graph.nodes)) {
-    const sourcePosition = ctx.positions.get(node.id);
-    if (!sourcePosition) {
+  for (const [id, position] of ctx.positions.entries()) {
+    const node = graph.nodes[id];
+    if (!node) {
       continue;
     }
 
-    for (const childId of node.children) {
+    const hasBranches = node.children.length > 1;
+    const isNodeCollapsed = collapsed[node.id] ?? hasBranches;
+    const isMainline = activeSet.has(node.id);
+
+    nodes.push({
+      id,
+      x: position.x,
+      y: position.y,
+      width: NODE_WIDTH,
+      height: NODE_HEIGHT,
+      node,
+      isMainline,
+      hasBranches,
+      branchCount: node.children.length,
+      isCollapsed: isNodeCollapsed,
+    });
+
+    const visibleChildren = getVisibleChildren(ctx, id);
+    for (const childId of visibleChildren) {
       const targetPosition = ctx.positions.get(childId);
       if (!targetPosition) {
         continue;
       }
 
       edges.push({
-        source: node.id,
+        source: id,
         target: childId,
-        path: edgePath(
-          {
-            ...sourcePosition,
-            width: NODE_WIDTH,
-            height: NODE_HEIGHT,
-          },
-          {
-            ...targetPosition,
-            width: NODE_WIDTH,
-            height: NODE_HEIGHT,
-          },
+        path: orthogonalEdgePath(
+          { ...position, width: NODE_WIDTH, height: NODE_HEIGHT },
+          { ...targetPosition, width: NODE_WIDTH, height: NODE_HEIGHT },
         ),
       });
     }
   }
 
-  const maxX = Math.max(...nodes.map((node) => node.x + node.width), 0);
-  const maxY = Math.max(...nodes.map((node) => node.y + node.height), 0);
+  const minX = nodes.length ? Math.min(...nodes.map((n) => n.x)) : 0;
+  const maxX = nodes.length ? Math.max(...nodes.map((n) => n.x + n.width)) : 1000;
+  const maxY = nodes.length ? Math.max(...nodes.map((n) => n.y + n.height)) : 400;
 
   return {
-    width: Math.max(1200, maxX + horizontalMargin),
+    width: Math.max(1200, maxX - minX + horizontalMargin * 2),
     height: Math.max(480, maxY + 72),
     nodes,
     edges,

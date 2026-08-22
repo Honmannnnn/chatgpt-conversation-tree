@@ -50,6 +50,8 @@ export function TreeCanvas() {
   const searchQuery = useConversationTreeStore((state) => state.searchQuery);
   const roleFilter = useConversationTreeStore((state) => state.roleFilter);
   const activeOnly = useConversationTreeStore((state) => state.activeOnly);
+  const collapsed = useConversationTreeStore((state) => state.collapsed);
+  const toggleCollapsed = useConversationTreeStore((state) => state.toggleCollapsed);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [viewBox, setViewBox] = useState<ViewBox>({ x: 0, y: 0, width: 1200, height: 600 });
@@ -60,8 +62,8 @@ export function TreeCanvas() {
       return null;
     }
 
-    return buildTreeLayout(graph);
-  }, [graph]);
+    return buildTreeLayout(graph, collapsed);
+  }, [graph, collapsed]);
 
   useEffect(() => {
     if (!layout) {
@@ -251,16 +253,27 @@ export function TreeCanvas() {
             const node = layoutNode.node;
             const selected = node.id === selectedNodeId;
             const active = node.active;
+            const isMainline = Boolean(layoutNode.isMainline);
+            const isBranchPoint = Boolean(layoutNode.hasBranches);
+            const isCollapsed = Boolean(layoutNode.isCollapsed);
             const accent = nodeAccent(node);
             const label = roleLabel(node);
             const content = node.plainContent || node.content;
             const title = node.title || content;
 
+            const nodeClasses = [
+              'ctree-node',
+              selected ? 'is-selected' : '',
+              active ? 'is-active' : '',
+              isMainline ? 'is-mainline' : '',
+              isBranchPoint ? 'is-branch-point' : '',
+            ].filter(Boolean).join(' ');
+
             return (
               <g
                 key={node.id}
                 transform={`translate(${layoutNode.x} ${layoutNode.y})`}
-                className={selected ? 'ctree-node is-selected' : active ? 'ctree-node is-active' : 'ctree-node'}
+                className={nodeClasses}
                 onClick={() => void selectAndNavigate(node.id)}
                 role="treeitem"
                 tabIndex={0}
@@ -275,6 +288,28 @@ export function TreeCanvas() {
                   <g transform={`translate(${layoutNode.width - 38} 12)`}>
                     <rect width="26" height="17" rx="5" className="ctree-node__version" />
                     <text x="13" y="12" textAnchor="middle" className="ctree-node__version-text">{node.versionLabel}</text>
+                  </g>
+                ) : null}
+                {isBranchPoint ? (
+                  <g
+                    transform={`translate(${layoutNode.width - 78} ${layoutNode.height - 23})`}
+                    className="ctree-branch-toggle"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggleCollapsed(node.id);
+                    }}
+                    role="button"
+                    aria-label={isCollapsed ? '展开分支' : '收起分支'}
+                  >
+                    <rect
+                      width="68"
+                      height="16"
+                      rx="4"
+                      className={`ctree-branch-badge ${isCollapsed ? 'is-collapsed' : 'is-expanded'}`}
+                    />
+                    <text x="34" y="11.5" textAnchor="middle" className="ctree-branch-badge-text">
+                      {isCollapsed ? `+ ${layoutNode.branchCount} 分支` : '− 收起分支'}
+                    </text>
                   </g>
                 ) : null}
               </g>

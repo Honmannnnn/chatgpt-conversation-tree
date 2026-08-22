@@ -37,6 +37,10 @@ export interface TreeLayoutNode {
   width: number;
   height: number;
   node: MessageNode;
+  isMainline?: boolean;
+  hasBranches?: boolean;
+  branchCount?: number;
+  isCollapsed?: boolean;
 }
 
 export interface TreeLayoutEdge {
