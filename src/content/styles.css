@@ -1,4 +1,5 @@
-:host {
+:host,
+:root {
   --ctree-bg: #f9fafb;
   --ctree-surface: #ffffff;
   --ctree-surface-2: #f3f4f6;
@@ -18,7 +19,9 @@
   text-rendering: optimizeLegibility;
 }
 
-:host([data-theme="dark"]) {
+:host([data-theme="dark"]),
+:root[data-theme="dark"],
+body.dark {
   --ctree-bg: #111827;
   --ctree-surface: #1f2937;
   --ctree-surface-2: #111827;

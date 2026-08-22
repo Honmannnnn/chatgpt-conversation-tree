@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { TreePanel } from '../content/components/TreePanel';
 import { useConversationTreeStore } from '../content/store';
 import { parseConversationApiResponse } from '../shared/api';
+import '../content/styles.css';
 import './demo.css';
 
 const sampleResponse = {

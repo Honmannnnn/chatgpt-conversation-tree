@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "smoke": "tsx scripts/smoke-parser.ts",
     "test:search": "tsx scripts/test-search.ts",
-    "check": "tsc --noEmit && tsx scripts/smoke-parser.ts && tsx scripts/test-search.ts",
+    "test:all": "tsx scripts/smoke-parser.ts && tsx scripts/test-search.ts && tsx scripts/comprehensive-test.ts",
+    "check": "tsc --noEmit && pnpm test:all",
     "release": "pnpm build && node scripts/release.mjs"
   },
   "dependencies": {
