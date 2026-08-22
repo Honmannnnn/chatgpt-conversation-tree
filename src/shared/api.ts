@@ -288,7 +288,13 @@ export function parseConversationApiResponse(payload: unknown): ConversationGrap
       ? payload.metadata.forked_from_message_id
       : null;
 
-  const isForked = Boolean(parentConversationId || forkedFromMessageId || payload.is_forked);
+  const isForked = Boolean(
+    parentConversationId ||
+    forkedFromMessageId ||
+    payload.is_forked ||
+    title.startsWith('分支 ·') ||
+    title.startsWith('分支·')
+  );
 
   const graph: ConversationGraph = {
     conversationId,

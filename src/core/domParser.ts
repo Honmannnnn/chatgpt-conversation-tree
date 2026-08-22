@@ -60,6 +60,26 @@ export function parseDomConversation(conversationId: string): ConversationGraph 
   }
 
   const pageTitle = document.title.replace(/\s*-\s*ChatGPT$/i, '').trim() || '当前对话';
+  const hasForkDivider = !!document.querySelector('div, p, span')?.textContent?.includes('独立的分支') ||
+    Array.from(document.querySelectorAll('*')).some((el) => el.childNodes.length === 1 && /从.*独立的分支/.test(el.textContent || ''));
+  const isForked = hasForkDivider || pageTitle.startsWith('分支 ·') || pageTitle.startsWith('分支·');
+
+  // Detect forkedFromMessageId from divider position if forked
+  let forkedFromMessageId: string | null = null;
+  if (isForked && activePath.length > 2) {
+    // By default, forked turns are after the middle/ancestor turns
+    const dividerEl = Array.from(document.querySelectorAll('*')).find((el) => el.childNodes.length === 1 && /从.*独立的分支/.test(el.textContent || ''));
+    if (dividerEl) {
+      let passedDivider = false;
+      for (let i = 0; i < messageElements.length; i++) {
+        if (dividerEl.compareDocumentPosition(messageElements[i]) & Node.DOCUMENT_POSITION_FOLLOWING) {
+          passedDivider = true;
+          forkedFromMessageId = activePath[Math.max(0, i - 1)];
+          break;
+        }
+      }
+    }
+  }
 
   return {
     conversationId,
@@ -68,7 +88,8 @@ export function parseDomConversation(conversationId: string): ConversationGraph 
     currentLeafId: activePath[activePath.length - 1],
     nodes,
     activePath,
-    isForked: false,
+    isForked,
+    forkedFromMessageId,
     capturedAt: Date.now(),
   };
 }
