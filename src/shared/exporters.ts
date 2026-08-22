@@ -1,4 +1,5 @@
 import { buildTreeLayout } from '../core/layout';
+import { truncateToWidth } from './markdown';
 import type { ConversationGraph, MessageNode } from './types';
 
 function escapeXml(value: string): string {
@@ -98,38 +99,74 @@ export function graphToMarkdown(graph: ConversationGraph): string {
 
 export function graphToSvg(graph: ConversationGraph): string {
   const layout = buildTreeLayout(graph);
-  const width = Math.max(1200, layout.width);
-  const height = Math.max(480, layout.height);
+  const paddingX = 40;
+  const paddingTop = 96;
+  const paddingBottom = 48;
+
+  const minX = layout.nodes.length ? Math.min(...layout.nodes.map((n) => n.x)) : 0;
+  const maxX = layout.nodes.length ? Math.max(...layout.nodes.map((n) => n.x + n.width)) : 1000;
+  const minY = layout.nodes.length ? Math.min(...layout.nodes.map((n) => n.y)) : 0;
+  const maxY = layout.nodes.length ? Math.max(...layout.nodes.map((n) => n.y + n.height)) : 400;
+
+  const offsetX = paddingX - minX;
+  const offsetY = paddingTop - minY;
+
+  const width = Math.max(1000, maxX - minX + paddingX * 2);
+  const height = Math.max(480, maxY - minY + paddingTop + paddingBottom);
   const background = '#f9fafb';
+
   const lines = [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`,
+    `  <defs>`,
+    `    <style>`,
+    `      .svg-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 700; fill: #111827; }`,
+    `      .svg-sub { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 11px; fill: #6b7280; }`,
+    `      .node-role { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 9px; font-weight: 700; }`,
+    `      .node-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 700; fill: #111827; }`,
+    `      .node-desc { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 10px; fill: #6b7280; }`,
+    `      .node-ver { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 9px; font-weight: 700; fill: #6b7280; }`,
+    `    </style>`,
+    `    <clipPath id="node-clip">`,
+    `      <rect width="236" height="78" rx="9" />`,
+    `    </clipPath>`,
+    `  </defs>`,
     `  <rect width="100%" height="100%" fill="${background}" />`,
-    `  <text x="24" y="32" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#111827">${escapeXml(graph.title)}</text>`,
-    `  <text x="24" y="52" font-family="Arial, sans-serif" font-size="11" fill="#6b7280">${escapeXml(graph.conversationId)}</text>`,
+    `  <text x="${paddingX}" y="36" class="svg-title">${escapeXml(graph.title)}</text>`,
+    `  <text x="${paddingX}" y="58" class="svg-sub">${escapeXml(graph.conversationId)} · ${Object.keys(graph.nodes).length} 节点 · 活跃路径 ${graph.activePath.length} 层</text>`,
+    `  <g transform="translate(${offsetX}, ${offsetY})">`,
+    `    <g class="edges">`,
   ];
 
   for (const edge of layout.edges) {
     const active = graph.nodes[edge.source]?.active && graph.nodes[edge.target]?.active;
-    lines.push(`  <path d="${edge.path}" fill="none" stroke="${active ? '#10a37f' : '#9ca3af'}" stroke-width="${active ? 2.2 : 1.4}" />`);
+    lines.push(`      <path d="${edge.path}" fill="none" stroke="${active ? '#10a37f' : '#9ca3af'}" stroke-width="${active ? 2.2 : 1.4}" />`);
   }
+  lines.push(`    </g>`);
+  lines.push(`    <g class="nodes">`);
 
   for (const layoutNode of layout.nodes) {
     const node = layoutNode.node;
     const accent = nodeColor(node);
-    const content = node.content.replace(/\s+/g, ' ').trim();
-    const title = node.title.replace(/\s+/g, ' ').trim();
+    const content = node.plainContent || node.content;
+    const title = node.title || content;
+    const maxTextWidth = layoutNode.width - 28;
+    const safeTitle = truncateToWidth(title, maxTextWidth, 12);
+    const safeContent = truncateToWidth(content, maxTextWidth, 10);
+
     lines.push(
-      `  <g transform="translate(${layoutNode.x} ${layoutNode.y})">`,
-      `    <rect width="${layoutNode.width}" height="${layoutNode.height}" rx="9" fill="#ffffff" stroke="${node.active ? '#10a37f' : '#d1d5db'}" stroke-width="${node.active ? 1.6 : 1}" />`,
-      `    <rect width="3" height="${layoutNode.height}" rx="1.5" fill="${accent}" />`,
-      `    <text x="14" y="20" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="${accent}">${escapeXml(roleText(node))}</text>`,
-      `    <text x="14" y="38" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#111827">${escapeXml(title.slice(0, 28))}</text>`,
-      `    <text x="14" y="55" font-family="Arial, sans-serif" font-size="10" fill="#6b7280">${escapeXml(content.slice(0, 42))}</text>`,
-      node.versionLabel ? `    <text x="${layoutNode.width - 24}" y="20" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#6b7280">${escapeXml(node.versionLabel)}</text>` : '',
-      `  </g>`,
+      `      <g transform="translate(${layoutNode.x} ${layoutNode.y})" clip-path="url(#node-clip)">`,
+      `        <rect width="${layoutNode.width}" height="${layoutNode.height}" rx="9" fill="#ffffff" stroke="${node.active ? '#10a37f' : '#d1d5db'}" stroke-width="${node.active ? 1.6 : 1}" />`,
+      `        <rect width="3" height="${layoutNode.height}" rx="1.5" fill="${accent}" />`,
+      `        <text x="14" y="20" class="node-role" fill="${accent}">${escapeXml(roleText(node))}</text>`,
+      `        <text x="14" y="38" class="node-title">${escapeXml(safeTitle)}</text>`,
+      `        <text x="14" y="55" class="node-desc">${escapeXml(safeContent)}</text>`,
+      node.versionLabel ? `        <text x="${layoutNode.width - 14}" y="20" class="node-ver" text-anchor="end">${escapeXml(node.versionLabel)}</text>` : '',
+      `      </g>`,
     );
   }
 
+  lines.push(`    </g>`);
+  lines.push(`  </g>`);
   lines.push('</svg>');
   return lines.join('\n');
 }
