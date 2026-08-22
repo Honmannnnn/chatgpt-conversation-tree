@@ -215,6 +215,25 @@ function handlePageMessage(event: MessageEvent): void {
     const currentUrlId = extractConversationIdFromUrl(window.location.href);
 
     if (graph) {
+      // If forked conversation lacks explicit forkedFromMessageId, detect from DOM divider position
+      if (graph.isForked && !graph.forkedFromMessageId && graph.activePath.length > 2) {
+        const dividerRegex = /从.*?(?:建立|独立)的分支|forked\s+from/i;
+        const dividerEl = Array.from(document.querySelectorAll('*')).find(
+          (el) => el.childNodes.length === 1 && dividerRegex.test(el.textContent || ''),
+        );
+        if (dividerEl) {
+          const messageElements = document.querySelectorAll(
+            'article, [data-message-author-role], [data-testid^="conversation-turn-"]',
+          );
+          for (let i = 0; i < messageElements.length; i++) {
+            if (dividerEl.compareDocumentPosition(messageElements[i]) & Node.DOCUMENT_POSITION_FOLLOWING) {
+              graph.forkedFromMessageId = graph.activePath[Math.max(0, i - 1)];
+              break;
+            }
+          }
+        }
+      }
+
       if (!currentUrlId || graph.conversationId === currentUrlId) {
         useConversationTreeStore.getState().setGraph(graph);
       }
