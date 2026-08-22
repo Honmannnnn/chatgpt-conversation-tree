@@ -23,12 +23,12 @@ function ensureHighlightStyle(): void {
       outline: 3px solid #10a37f !important;
       outline-offset: 5px !important;
       border-radius: 12px !important;
-      animation: ctree-message-pulse 1.1s ease-out;
+      animation: ctree-message-pulse 0.9s ease-out;
     }
 
     @keyframes ctree-message-pulse {
-      0% { box-shadow: 0 0 0 0 rgba(16, 163, 127, 0.35); }
-      70% { box-shadow: 0 0 0 14px rgba(16, 163, 127, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(16, 163, 127, 0.4); }
+      70% { box-shadow: 0 0 0 12px rgba(16, 163, 127, 0); }
       100% { box-shadow: 0 0 0 0 rgba(16, 163, 127, 0); }
     }
   `;
@@ -40,26 +40,33 @@ function flashMessageElement(element: HTMLElement): void {
   element.classList.remove(HIGHLIGHT_CLASS);
   void element.offsetWidth;
   element.classList.add(HIGHLIGHT_CLASS);
-  window.setTimeout(() => element.classList.remove(HIGHLIGHT_CLASS), 1300);
+  window.setTimeout(() => element.classList.remove(HIGHLIGHT_CLASS), 1000);
 }
 
-export function findMessageElement(sourceMessageId: string): HTMLElement | null {
-  const id = quoteSelector(sourceMessageId);
-  const selectors = [
-    `[data-message-id="${id}"]`,
-    `[data-message-author-role][data-message-id="${id}"]`,
-    `article[data-message-id="${id}"]`,
-  ];
+const messageElementCache = new Map<string, HTMLElement>();
 
-  for (const selector of selectors) {
-    const element = document.querySelector<HTMLElement>(selector);
-    if (element) {
-      return element;
-    }
+export function findMessageElement(sourceMessageId: string): HTMLElement | null {
+  const cached = messageElementCache.get(sourceMessageId);
+  if (cached && cached.isConnected && cached.dataset.messageId === sourceMessageId) {
+    return cached;
+  }
+
+  const id = quoteSelector(sourceMessageId);
+  const element = document.querySelector<HTMLElement>(`[data-message-id="${id}"]`)
+    || document.querySelector<HTMLElement>(`article[data-message-id="${id}"]`)
+    || document.querySelector<HTMLElement>(`[data-message-author-role][data-message-id="${id}"]`);
+
+  if (element) {
+    messageElementCache.set(sourceMessageId, element);
+    return element;
   }
 
   const candidates = Array.from(document.querySelectorAll<HTMLElement>('[data-message-id]'));
-  return candidates.find((element) => element.dataset.messageId === sourceMessageId) ?? null;
+  const found = candidates.find((item) => item.dataset.messageId === sourceMessageId) ?? null;
+  if (found) {
+    messageElementCache.set(sourceMessageId, found);
+  }
+  return found;
 }
 
 function getVersionSiblings(graph: ConversationGraph, node: MessageNode): MessageNode[] {
@@ -138,35 +145,19 @@ function controlsFromButtons(buttons: HTMLElement[]): BranchControls {
   return controls;
 }
 
-function ancestorChain(element: HTMLElement): HTMLElement[] {
-  const chain: HTMLElement[] = [];
-  let cursor: HTMLElement | null = element;
-  while (cursor) {
-    chain.push(cursor);
-    cursor = cursor.parentElement;
-  }
-  return chain;
-}
-
-function domDistance(a: HTMLElement, b: HTMLElement): number {
-  const chainA = ancestorChain(a);
-  const chainB = ancestorChain(b);
-  const bIndex = new Map(chainB.map((element, index) => [element, index]));
-
-  for (let indexA = 0; indexA < chainA.length; indexA += 1) {
-    const indexB = bIndex.get(chainA[indexA]);
-    if (indexB !== undefined) {
-      return indexA + indexB;
+function findBranchControls(element: HTMLElement): BranchControls {
+  // Fast path: check parent article / message container first
+  const container = element.closest('article, [data-message-id]') as HTMLElement | null;
+  if (container) {
+    const localButtons = Array.from(container.querySelectorAll<HTMLElement>('button'));
+    const localControls = controlsFromButtons(localButtons);
+    if (localControls.previous.length || localControls.next.length) {
+      return localControls;
     }
   }
 
-  return Number.POSITIVE_INFINITY;
-}
-
-function findBranchControls(element: HTMLElement): BranchControls {
   let cursor: HTMLElement | null = element;
-
-  for (let depth = 0; cursor && depth < 12; depth += 1) {
+  for (let depth = 0; cursor && depth < 6; depth += 1) {
     const buttons = Array.from(cursor.querySelectorAll<HTMLElement>('button'));
     const controls = controlsFromButtons(buttons);
 
@@ -178,15 +169,10 @@ function findBranchControls(element: HTMLElement): BranchControls {
   }
 
   const candidates = Array.from(document.querySelectorAll<HTMLElement>(
-    'button[aria-label="上一回复"], button[aria-label="下一回复"], button[data-testid*="prev-button"], button[data-testid*="next-button"]',
+    'button[aria-label*="上一"], button[aria-label*="下一"], button[data-testid*="prev"], button[data-testid*="next"]',
   ));
 
-  if (!candidates.length) {
-    return { previous: [], next: [] };
-  }
-
-  const nearest = candidates.sort((a, b) => domDistance(element, a) - domDistance(element, b));
-  return controlsFromButtons(nearest.slice(0, 4));
+  return controlsFromButtons(candidates.slice(0, 4));
 }
 
 function scrollToMessage(element: HTMLElement): void {
@@ -236,7 +222,7 @@ export async function navigateToNode(
         }
 
         button.click();
-        await wait(120);
+        await wait(35);
 
         target = findMessageElement(node.sourceMessageId);
         if (target) {
@@ -264,7 +250,7 @@ export async function navigateToNode(
         }
 
         button.click();
-        await wait(120);
+        await wait(35);
 
         target = findMessageElement(node.sourceMessageId);
         if (target) {

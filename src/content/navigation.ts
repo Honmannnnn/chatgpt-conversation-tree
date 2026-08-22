@@ -8,9 +8,7 @@ export async function selectAndNavigate(nodeId: string): Promise<void> {
   }
 
   useConversationTreeStore.getState().setSelectedNodeId(nodeId);
-  window.setTimeout(async () => {
-    const result = await navigateToNode(graph, nodeId);
-
+  void navigateToNode(graph, nodeId).then((result) => {
     if (result.found && result.switched) {
       useConversationTreeStore.getState().setNotice('已切换到目标版本并定位');
     } else if (result.found) {
@@ -18,5 +16,5 @@ export async function selectAndNavigate(nodeId: string): Promise<void> {
     } else {
       useConversationTreeStore.getState().setNotice('目标消息尚未出现在页面中，可稍后重试或刷新');
     }
-  }, 0);
+  });
 }
