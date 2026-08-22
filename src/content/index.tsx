@@ -167,18 +167,26 @@ function syncCurrentConversation(): void {
       if (response?.data) {
         useConversationTreeStore.getState().setGraph(response.data);
       } else {
-        // Fallback: parse current DOM messages immediately
-        const domGraph = parseDomConversation(conversationId);
-        if (domGraph && !useConversationTreeStore.getState().graph) {
-          useConversationTreeStore.getState().setGraph(domGraph);
-        }
+        // Fallback: parse stable DOM after a brief delay if API fetch hasn't arrived
+        window.setTimeout(() => {
+          if (extractConversationIdFromUrl(window.location.href) === conversationId && !useConversationTreeStore.getState().graph) {
+            const domGraph = parseDomConversation(conversationId);
+            if (domGraph) {
+              useConversationTreeStore.getState().setGraph(domGraph);
+            }
+          }
+        }, 500);
       }
     }
   }).catch(() => {
-    const domGraph = parseDomConversation(conversationId);
-    if (domGraph && !useConversationTreeStore.getState().graph) {
-      useConversationTreeStore.getState().setGraph(domGraph);
-    }
+    window.setTimeout(() => {
+      if (extractConversationIdFromUrl(window.location.href) === conversationId && !useConversationTreeStore.getState().graph) {
+        const domGraph = parseDomConversation(conversationId);
+        if (domGraph) {
+          useConversationTreeStore.getState().setGraph(domGraph);
+        }
+      }
+    }, 500);
   });
 
   // 2. Request active fetch via injected script
