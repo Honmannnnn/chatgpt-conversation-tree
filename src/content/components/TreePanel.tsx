@@ -115,6 +115,26 @@ export function TreePanel() {
         </div>
       </section>
 
+      {graph?.isForked ? (
+        <div className="ctree-fork-alert">
+          <div className="ctree-fork-alert__badge">🔀 分支子对话</div>
+          <p className="ctree-fork-alert__text">
+            当前会话是从历史消息分叉的独立子对话，仅包含当前分支。
+          </p>
+          {graph.parentConversationId ? (
+            <button
+              className="ctree-fork-alert__button"
+              type="button"
+              onClick={() => {
+                window.location.href = `/c/${graph.parentConversationId}`;
+              }}
+            >
+              返回主线对话 →
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="ctree-search">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
           <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.7" />

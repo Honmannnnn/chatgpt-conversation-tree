@@ -220,6 +220,55 @@ button {
   font-size: 11px;
 }
 
+.ctree-fork-alert {
+  margin: 10px 14px 0;
+  padding: 10px 12px;
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+:host([data-theme="dark"]) .ctree-fork-alert {
+  background: rgba(217, 119, 6, 0.15);
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+.ctree-fork-alert__badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ctree-tool);
+}
+
+.ctree-fork-alert__text {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--ctree-text);
+  opacity: 0.9;
+}
+
+.ctree-fork-alert__button {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--ctree-tool);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 140ms ease;
+}
+
+.ctree-fork-alert__button:hover {
+  opacity: 0.9;
+}
+
 .ctree-search {
   position: relative;
   display: flex;
