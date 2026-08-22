@@ -55,42 +55,37 @@ function aggregateConversationGraphs(
     return null;
   }
 
-  // Find root conversation ID by walking up parentConversationId
-  let rootId = targetId;
-  const visited = new Set<string>();
-  while (rootId && !visited.has(rootId)) {
-    visited.add(rootId);
-    const curr = allData[graphKey(rootId)] as ConversationGraph | undefined;
-    if (curr?.parentConversationId && allData[graphKey(curr.parentConversationId)]) {
-      rootId = curr.parentConversationId;
-    } else {
-      break;
-    }
-  }
+  // 1. Gather all stored graphs
+  const allStoredGraphs: ConversationGraph[] = Object.entries(allData)
+    .filter(([k, v]) => k.startsWith(GRAPH_PREFIX) && v && typeof v === 'object')
+    .map(([_, v]) => v as ConversationGraph);
 
-  // Collect all graphs belonging to rootId's family tree
-  const familyGraphs: ConversationGraph[] = [];
-  for (const [key, val] of Object.entries(allData)) {
-    if (!key.startsWith(GRAPH_PREFIX) || !val || typeof val !== 'object') {
-      continue;
-    }
+  // 2. Expand family cluster transitively via shared message IDs or conversation parent links
+  const familyGraphs: ConversationGraph[] = [target];
+  const processed = new Set<string>([target.conversationId]);
 
-    const g = val as ConversationGraph;
-    let currId: string | null | undefined = g.conversationId;
-    const pathVisited = new Set<string>();
-    let belongs = false;
+  let addedNew = true;
+  while (addedNew) {
+    addedNew = false;
+    const familyNodeIds = new Set(familyGraphs.flatMap((g) => Object.keys(g.nodes || {})));
+    const familyConvIds = new Set(familyGraphs.map((g) => g.conversationId));
 
-    while (currId && !pathVisited.has(currId)) {
-      if (currId === rootId) {
-        belongs = true;
-        break;
+    for (const g of allStoredGraphs) {
+      if (processed.has(g.conversationId)) {
+        continue;
       }
-      pathVisited.add(currId);
-      currId = (allData[graphKey(currId)] as ConversationGraph | undefined)?.parentConversationId;
-    }
 
-    if (belongs) {
-      familyGraphs.push(g);
+      // Check if g shares any message node ID with the family
+      const gNodeIds = Object.keys(g.nodes || {});
+      const sharesNode = gNodeIds.some((id) => familyNodeIds.has(id));
+      const sharesConv = familyConvIds.has(g.parentConversationId || '') ||
+        familyGraphs.some((fg) => fg.parentConversationId === g.conversationId);
+
+      if (sharesNode || sharesConv) {
+        familyGraphs.push(g);
+        processed.add(g.conversationId);
+        addedNew = true;
+      }
     }
   }
 
@@ -98,7 +93,7 @@ function aggregateConversationGraphs(
     return target;
   }
 
-  // Merge all nodes into a unified super-graph
+  // 3. Merge all nodes into one unified master graph
   const mergedNodes: Record<string, any> = {};
   for (const g of familyGraphs) {
     for (const [nodeId, node] of Object.entries(g.nodes)) {
@@ -120,9 +115,28 @@ function aggregateConversationGraphs(
     }
   }
 
+  // 4. Determine true global root ID (the earliest node without parents or parent not in mapping)
+  const allChildIds = new Set(Object.values(mergedNodes).flatMap((n: any) => n.children));
+  const candidateRoots = Object.keys(mergedNodes).filter((id) => !mergedNodes[id].parentId || !allChildIds.has(id));
+
+  // Sort candidate roots by createdAt ascending to find the true original starting message
+  candidateRoots.sort((a, b) => (mergedNodes[a].createdAt ?? 0) - (mergedNodes[b].createdAt ?? 0));
+  const globalRootId = candidateRoots[0] || target.rootId;
+
+  // 5. Re-link parentId for all children
+  for (const [pId, pNode] of Object.entries(mergedNodes)) {
+    for (const cId of (pNode as any).children) {
+      if (mergedNodes[cId] && !mergedNodes[cId].parentId) {
+        mergedNodes[cId].parentId = pId;
+      }
+    }
+  }
+
   return {
     ...target,
+    rootId: globalRootId,
     nodes: mergedNodes,
+    activePath: target.activePath,
   };
 }
 
