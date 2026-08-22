@@ -140,8 +140,18 @@ function injectNetworkCapture(): void {
 
 function syncCurrentConversation(): void {
   const conversationId = extractConversationIdFromUrl(window.location.href);
+  const currentGraph = useConversationTreeStore.getState().graph;
+
   if (!conversationId) {
+    if (currentGraph) {
+      useConversationTreeStore.getState().setGraph(null);
+    }
     return;
+  }
+
+  // If navigated to a different conversation, clear stale previous tree immediately
+  if (currentGraph && currentGraph.conversationId !== conversationId) {
+    useConversationTreeStore.getState().setGraph(null);
   }
 
   // 1. Try restoring from local storage
@@ -149,12 +159,10 @@ function syncCurrentConversation(): void {
     type: MessageTypes.GetGraph,
     payload: { conversationId },
   }).then((response) => {
-    if (response?.data) {
-      useConversationTreeStore.getState().setGraph(response.data);
-      void chrome.runtime.sendMessage({
-        type: MessageTypes.CaptureApiResponse,
-        payload: response.data,
-      }).catch(() => undefined);
+    if (extractConversationIdFromUrl(window.location.href) === conversationId) {
+      if (response?.data) {
+        useConversationTreeStore.getState().setGraph(response.data);
+      }
     }
   }).catch(() => undefined);
 
@@ -181,9 +189,12 @@ function handlePageMessage(event: MessageEvent): void {
 
   if (message.type === 'API_RESPONSE') {
     const graph = parseConversationApiResponse(message.payload?.body);
+    const currentUrlId = extractConversationIdFromUrl(window.location.href);
 
     if (graph) {
-      useConversationTreeStore.getState().setGraph(graph);
+      if (!currentUrlId || graph.conversationId === currentUrlId) {
+        useConversationTreeStore.getState().setGraph(graph);
+      }
       void chrome.runtime.sendMessage({
         type: MessageTypes.CaptureApiResponse,
         payload: graph,
