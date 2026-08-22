@@ -198,15 +198,10 @@ export function computeGitGraphLayout(
       if (fromLane === toLane) {
         // Straight rail down the exact same lane
         path = `M ${x1} ${y1} L ${x2} ${y2}`;
-      } else if (toRow <= fromRow + 1) {
-        // Direct adjacent row fork curve
+      } else {
+        // Smooth cubic bezier curve directly from parent to child
         const midY = (y1 + y2) / 2;
         path = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
-      } else {
-        // Multi-row fork: curve out smoothly below parent, then continue vertical down the branch lane
-        const forkY = (fromRow + 1) * rowHeight + rowHeight / 2;
-        const midY = (y1 + forkY) / 2;
-        path = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${forkY} L ${x2} ${y2}`;
       }
 
       segments.push({

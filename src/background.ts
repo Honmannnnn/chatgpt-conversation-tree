@@ -170,8 +170,8 @@ async function handleMessage(
       }
 
       const all = await chrome.storage.local.get(null);
-      const aggregated = aggregateConversationGraphs(conversationId, all);
-      return respond(aggregated ?? all[graphKey(conversationId)] ?? null);
+      const currentGraph = all[graphKey(conversationId)] as ConversationGraph | undefined;
+      return respond(currentGraph ?? null);
     }
 
     case MessageTypes.ClearGraph: {
