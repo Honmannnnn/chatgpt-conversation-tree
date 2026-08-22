@@ -59,8 +59,7 @@ export function GitGraphView() {
     return null;
   }
 
-  const railsWidth = Math.max(36, (layout.totalLanes + 1) * LANE_WIDTH + 6);
-  const lanePadding = 12;
+  const { railsWidth } = layout;
 
   return (
     <div className="ctree-git-graph" ref={containerRef}>
@@ -96,8 +95,6 @@ export function GitGraphView() {
 
           {/* Commit-style Dots on Rails */}
           {layout.rows.map((row) => {
-            const cx = lanePadding + row.lane * LANE_WIDTH;
-            const cy = row.row * ROW_HEIGHT + ROW_HEIGHT / 2;
             const isSelected = selectedNodeId === row.id;
 
             return (
@@ -112,8 +109,8 @@ export function GitGraphView() {
                 {/* Outer Ring for Active / Selected */}
                 {row.isActive || isSelected ? (
                   <circle
-                    cx={cx}
-                    cy={cy}
+                    cx={row.cx}
+                    cy={row.cy}
                     r={isSelected ? 7.5 : 6.5}
                     fill="none"
                     stroke={row.color}
@@ -124,8 +121,8 @@ export function GitGraphView() {
 
                 {/* Core Dot */}
                 <circle
-                  cx={cx}
-                  cy={cy}
+                  cx={row.cx}
+                  cy={row.cy}
                   r={row.isMainline ? 4.5 : 3.8}
                   fill={row.isActive ? row.color : 'var(--ctree-surface)'}
                   stroke={row.color}
@@ -139,7 +136,7 @@ export function GitGraphView() {
         {/* Message Cards List */}
         <div
           className="ctree-git-cards"
-          style={{ marginLeft: `${railsWidth + 8}px` }}
+          style={{ marginLeft: `${railsWidth + 6}px` }}
         >
           {layout.rows.map((row) => {
             const isSelected = selectedNodeId === row.id;
