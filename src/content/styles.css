@@ -693,18 +693,23 @@ button {
 
 .ctree-branch-toggle {
   cursor: pointer;
-  transition: transform 120ms ease, opacity 120ms ease;
+  transition: opacity 120ms ease;
 }
 
 .ctree-branch-toggle:hover {
-  opacity: 0.9;
-  transform: scale(1.04);
+  opacity: 0.85;
 }
 
 .ctree-branch-badge.is-collapsed {
   fill: rgba(217, 119, 6, 0.14);
   stroke: #d97706;
   stroke-width: 0.9;
+  transition: fill 120ms ease, stroke 120ms ease;
+}
+
+.ctree-branch-toggle:hover .ctree-branch-badge.is-collapsed {
+  fill: rgba(217, 119, 6, 0.28);
+  stroke: #b45309;
 }
 
 .ctree-branch-badge.is-collapsed + .ctree-branch-badge-text {
