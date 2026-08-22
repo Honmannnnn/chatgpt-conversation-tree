@@ -1,9 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useConversationTreeStore } from '../store';
 import { MessageTypes } from '../../shared/messages';
 import { NodeDetail } from './NodeDetail';
 import { SearchResults } from './SearchResults';
-import { TreeCanvas } from './TreeCanvas';
 import { GitGraphView } from './GitGraphView';
 import { downloadJson, downloadMarkdown, downloadSvg } from '../../shared/exporters';
 import { LogoMark } from '../../shared/LogoMark';
@@ -17,8 +16,6 @@ export function TreePanel() {
   const notice = useConversationTreeStore((state) => state.notice);
   const roleFilter = useConversationTreeStore((state) => state.roleFilter);
   const activeOnly = useConversationTreeStore((state) => state.activeOnly);
-  const viewMode = useConversationTreeStore((state) => state.viewMode);
-  const setViewMode = useConversationTreeStore((state) => state.setViewMode);
   const setSearchQuery = useConversationTreeStore((state) => state.setSearchQuery);
   const setPanelOpen = useConversationTreeStore((state) => state.setPanelOpen);
   const setSelectedNodeId = useConversationTreeStore((state) => state.setSelectedNodeId);
@@ -26,6 +23,9 @@ export function TreePanel() {
   const setNotice = useConversationTreeStore((state) => state.setNotice);
   const setRoleFilter = useConversationTreeStore((state) => state.setRoleFilter);
   const setActiveOnly = useConversationTreeStore((state) => state.setActiveOnly);
+
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!notice) {
@@ -36,14 +36,30 @@ export function TreePanel() {
     return () => window.clearTimeout(timer);
   }, [notice, setNotice]);
 
-  const activeCount = graph?.activePath.length ?? 0;
-  const versionCount = useMemo(() => {
-    if (!graph) {
-      return 0;
+  // Close export menu on outside click
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setExportMenuOpen(false);
+      }
+    };
+    if (exportMenuOpen) {
+      window.addEventListener('mousedown', handleOutside);
     }
+    return () => window.removeEventListener('mousedown', handleOutside);
+  }, [exportMenuOpen]);
 
-    const groups = new Set(Object.values(graph.nodes).map((node) => node.versionGroupId).filter(Boolean));
-    return groups.size;
+  const activeCount = graph?.activePath.length ?? 0;
+  const totalNodesCount = graph ? Object.keys(graph.nodes).length : 0;
+  const branchCount = useMemo(() => {
+    if (!graph) return 0;
+    let count = 0;
+    for (const node of Object.values(graph.nodes)) {
+      if ((node.children?.length ?? 0) > 1) {
+        count += node.children.length - 1;
+      }
+    }
+    return count;
   }, [graph]);
 
   const refresh = () => {
@@ -54,7 +70,8 @@ export function TreePanel() {
 
   const clearSelection = () => setSelectedNodeId(null);
 
-  const exportGraph = (kind: 'json' | 'markdown' | 'svg') => {
+  const handleExport = (kind: 'json' | 'markdown' | 'svg') => {
+    setExportMenuOpen(false);
     if (!graph) {
       setNotice('暂无可导出的对话数据');
       return;
@@ -63,66 +80,111 @@ export function TreePanel() {
     if (kind === 'json') {
       downloadJson(graph);
       setNotice('已导出 JSON');
-    }
-
-    if (kind === 'markdown') {
+    } else if (kind === 'markdown') {
       downloadMarkdown(graph);
       setNotice('已导出 Markdown');
-    }
-
-    if (kind === 'svg') {
+    } else if (kind === 'svg') {
       downloadSvg(graph);
       setNotice('已导出 SVG');
     }
   };
 
+  const roleTabs: Array<{ key: MessageRole | 'all'; label: string }> = [
+    { key: 'all', label: '全部' },
+    { key: 'user', label: '提问' },
+    { key: 'assistant', label: '回复' },
+    { key: 'tool', label: '工具' },
+  ];
+
   return (
-    <aside className="ctree-panel" aria-label="ChatGPT 对话树">
+    <aside className="ctree-panel" aria-label="ChatGPT 对话分支树">
+      {/* 1. Header with Clean Brand & Actions */}
       <header className="ctree-panel__header">
         <div className="ctree-panel__brand">
           <span className="ctree-panel__brand-mark">
-            <LogoMark size={32} />
+            <LogoMark size={28} />
           </span>
-          <div>
-            <h1>Conversation Tree</h1>
-            <p>{graph?.title ?? '等待对话数据'}</p>
+          <div className="ctree-panel__brand-info">
+            <div className="ctree-panel__title-row">
+              <h1>Conversation Tree</h1>
+              {graph ? (
+                <span className="ctree-status-badge">
+                  {totalNodesCount} 节点 · {branchCount > 0 ? `${branchCount} 分支` : '单主线'}
+                </span>
+              ) : null}
+            </div>
+            <p>{graph?.title || '等待对话数据...'}</p>
           </div>
         </div>
+
         <div className="ctree-panel__actions">
-          <button className="ctree-icon-button" type="button" onClick={refresh} disabled={isRefreshing} aria-label="刷新" title="刷新">
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
+          {/* Export Menu Popover */}
+          <div className="ctree-export-menu-wrapper" ref={exportMenuRef}>
+            <button
+              className="ctree-icon-button"
+              type="button"
+              onClick={() => setExportMenuOpen(!exportMenuOpen)}
+              title="导出对话"
+              aria-label="导出对话"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+                <path d="M12 3v12M12 15l-4-4M12 15l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {exportMenuOpen ? (
+              <div className="ctree-export-popover">
+                <div className="ctree-export-popover__title">导出对话图谱</div>
+                <button type="button" onClick={() => handleExport('markdown')}>
+                  <span className="ctree-export-icon">MD</span>
+                  <span>Markdown 文档</span>
+                </button>
+                <button type="button" onClick={() => handleExport('json')}>
+                  <span className="ctree-export-icon">{}</span>
+                  <span>JSON 结构数据</span>
+                </button>
+                <button type="button" onClick={() => handleExport('svg')}>
+                  <span className="ctree-export-icon">SVG</span>
+                  <span>SVG 矢量图</span>
+                </button>
+              </div>
+            ) : null}
+          </div>
+
+          <button
+            className="ctree-icon-button"
+            type="button"
+            onClick={refresh}
+            disabled={isRefreshing}
+            aria-label="刷新"
+            title="刷新对话"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true" className={isRefreshing ? 'is-spinning' : ''}>
               <path d="M19 8a7.5 7.5 0 1 0 1 5.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               <path d="M19 3v5h-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          <button className="ctree-icon-button" type="button" onClick={() => setPanelOpen(false)} aria-label="关闭" title="关闭">
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true">
+
+          <button
+            className="ctree-icon-button"
+            type="button"
+            onClick={() => setPanelOpen(false)}
+            aria-label="关闭"
+            title="关闭面板"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
               <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </button>
         </div>
       </header>
 
-      <section className="ctree-panel__metrics">
-        <div className="ctree-metric">
-          <strong>{graph ? Object.keys(graph.nodes).length : 0}</strong>
-          <span>节点</span>
-        </div>
-        <div className="ctree-metric">
-          <strong>{activeCount}</strong>
-          <span>活跃路径</span>
-        </div>
-        <div className="ctree-metric">
-          <strong>{versionCount}</strong>
-          <span>版本组</span>
-        </div>
-      </section>
-
+      {/* 2. Forked Chat Banner if applicable */}
       {graph?.isForked ? (
         <div className="ctree-fork-alert">
           <div className="ctree-fork-alert__badge">🔀 分支子对话</div>
           <p className="ctree-fork-alert__text">
-            当前会话是从历史消息分叉的独立子对话，仅包含当前分支。
+            当前是从历史消息分叉的独立子对话，已自动聚合主线与兄弟分支。
           </p>
           {graph.parentConversationId ? (
             <button
@@ -132,89 +194,72 @@ export function TreePanel() {
                 window.location.href = `/c/${graph.parentConversationId}`;
               }}
             >
-              返回主线对话 →
+              返回主线 →
             </button>
           ) : null}
         </div>
       ) : null}
 
-      <div className="ctree-search">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-          <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.7" />
-          <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-        </svg>
-        <input
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-          placeholder="搜索节点"
-          aria-label="搜索节点"
-        />
-        {searchQuery ? (
-          <button className="ctree-search__clear" type="button" onClick={() => setSearchQuery('')} aria-label="清除搜索">×</button>
-        ) : null}
-      </div>
-
-      <div className="ctree-toolbar">
-        <select
-          className="ctree-select"
-          value={roleFilter}
-          onChange={(event) => setRoleFilter(event.target.value as MessageRole | 'all')}
-          aria-label="角色筛选"
-        >
-          <option value="all">全部角色</option>
-          <option value="user">用户</option>
-          <option value="assistant">模型</option>
-          <option value="tool">工具</option>
-          <option value="system">系统</option>
-        </select>
-        <label className="ctree-toggle">
+      {/* 3. Modern Search & Filter Controls */}
+      <div className="ctree-controls">
+        <div className="ctree-search-box">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.8" />
+            <path d="m15.5 15.5 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
           <input
-            type="checkbox"
-            checked={activeOnly}
-            onChange={(event) => setActiveOnly(event.target.checked)}
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="搜索对话节点内容..."
+            aria-label="搜索节点"
           />
-          <span>仅活跃路径</span>
-        </label>
-        <div className="ctree-toolbar__spacer" />
-        <div className="ctree-view-toggle">
-          <button
-            type="button"
-            className={`ctree-view-tab ${viewMode === 'git' ? 'is-active' : ''}`}
-            onClick={() => setViewMode('git')}
-            title="Git 分支视图 (清晰垂直时间线)"
-          >
-            Git 分支
-          </button>
-          <button
-            type="button"
-            className={`ctree-view-tab ${viewMode === 'tree' ? 'is-active' : ''}`}
-            onClick={() => setViewMode('tree')}
-            title="拓扑树视图 (全景画布)"
-          >
-            全景拓扑
-          </button>
+          {searchQuery ? (
+            <button className="ctree-search-box__clear" type="button" onClick={() => setSearchQuery('')} aria-label="清除搜索">×</button>
+          ) : null}
         </div>
-        <div className="ctree-export-group">
-          <button className="ctree-export-button" type="button" onClick={() => exportGraph('json')} title="导出 JSON" aria-label="导出 JSON">JSON</button>
-          <button className="ctree-export-button" type="button" onClick={() => exportGraph('markdown')} title="导出 Markdown" aria-label="导出 Markdown">MD</button>
-          <button className="ctree-export-button" type="button" onClick={() => exportGraph('svg')} title="导出 SVG" aria-label="导出 SVG">SVG</button>
+
+        <div className="ctree-filter-bar">
+          {/* Segmented Role Chips */}
+          <div className="ctree-chip-group">
+            {roleTabs.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                className={`ctree-chip ${roleFilter === tab.key ? 'is-active' : ''}`}
+                onClick={() => setRoleFilter(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Active Mainline Toggle */}
+          <button
+            type="button"
+            className={`ctree-mainline-toggle ${activeOnly ? 'is-active' : ''}`}
+            onClick={() => setActiveOnly(!activeOnly)}
+            title="仅查看当前活跃路径"
+          >
+            <span className="ctree-mainline-toggle__dot" />
+            <span>仅活跃主线</span>
+          </button>
         </div>
       </div>
 
       <SearchResults />
 
+      {/* 4. Main Body: Pure Git Branch View */}
       <div className="ctree-panel__body">
         {graph ? (
           <>
-            <div className="ctree-canvas-wrap">
-              {viewMode === 'git' ? <GitGraphView /> : <TreeCanvas />}
+            <div className="ctree-git-container">
+              <GitGraphView />
             </div>
             {selectedNodeId ? (
               <NodeDetail nodeId={selectedNodeId} onClose={clearSelection} />
             ) : (
               <div className="ctree-empty-hint">
-                <span>选择一个节点查看完整内容</span>
-                <small>点击列表中任意消息卡片或节点</small>
+                <span>点击任意节点卡片查看完整消息内容</span>
               </div>
             )}
           </>
@@ -222,17 +267,17 @@ export function TreePanel() {
           <div className="ctree-empty-state">
             <div className="ctree-empty-state__icon">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" aria-hidden="true">
-                <path d="M4 5.5h6a5.5 5.5 0 0 1 5.5 5.5v8M4 5.5h7a3.5 3.5 0 0 1 3.5 3.5v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                <circle cx="18" cy="5" r="2" fill="currentColor" />
-                <circle cx="5" cy="18" r="2" fill="currentColor" />
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
             </div>
-            <strong>尚未捕获到对话</strong>
-            <span>打开或刷新一个 ChatGPT 对话后，插件会自动解析完整分支树。</span>
+            <strong>等待捕获对话</strong>
+            <span>在 ChatGPT 中打开任意对话，插件会自动生成 Git 分支树。</span>
             <button className="ctree-primary-button" type="button" onClick={refresh}>立即刷新</button>
           </div>
         )}
       </div>
+
       {notice ? <div className="ctree-toast" role="status">{notice}</div> : null}
     </aside>
   );
