@@ -1,14 +1,13 @@
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { MessageTypes } from '../shared/messages';
-import { parseConversationApiResponse } from '../shared/api';
+import { extractConversationIdFromUrl, parseConversationApiResponse } from '../shared/api';
 import { useConversationTreeStore } from './store';
 import styles from './styles.css?inline';
 
 const HOST_ID = 'ctree-root';
 const INJECTED_SCRIPT_ID = 'ctree-injected';
 const MESSAGE_SOURCE = 'chatgpt-conversation-tree';
-const captureNonce = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
 
 function isDarkTheme(): boolean {
   const html = document.documentElement;
@@ -116,7 +115,6 @@ function injectNetworkCapture(): void {
     script.id = INJECTED_SCRIPT_ID;
     script.src = chrome.runtime.getURL('injected.js');
     script.dataset.ctreeInjected = 'true';
-    script.dataset.ctreeNonce = captureNonce;
     document.head.appendChild(script);
   };
 
@@ -140,13 +138,40 @@ function injectNetworkCapture(): void {
   }
 }
 
+function syncCurrentConversation(): void {
+  const conversationId = extractConversationIdFromUrl(window.location.href);
+  if (!conversationId) {
+    return;
+  }
+
+  // 1. Try restoring from local storage
+  void chrome.runtime.sendMessage({
+    type: MessageTypes.GetGraph,
+    payload: { conversationId },
+  }).then((response) => {
+    if (response?.data) {
+      useConversationTreeStore.getState().setGraph(response.data);
+    }
+  }).catch(() => undefined);
+
+  // 2. Request active fetch via injected script
+  window.postMessage(
+    {
+      source: 'ctree-content',
+      type: 'FETCH_CONVERSATION',
+      conversationId,
+    },
+    '*',
+  );
+}
+
 function handlePageMessage(event: MessageEvent): void {
   if (event.source !== window || !event.data || typeof event.data !== 'object') {
     return;
   }
 
   const message = event.data as Record<string, any>;
-  if (message.source !== MESSAGE_SOURCE || message.nonce !== captureNonce) {
+  if (message.source !== MESSAGE_SOURCE) {
     return;
   }
 
@@ -163,11 +188,18 @@ function handlePageMessage(event: MessageEvent): void {
   }
 }
 
-function requestRefresh(): void {
-  window.location.reload();
-}
+let lastUrl = window.location.href;
+const checkUrlChange = () => {
+  const currentUrl = window.location.href;
+  if (currentUrl !== lastUrl) {
+    lastUrl = currentUrl;
+    syncCurrentConversation();
+  }
+};
 
 window.addEventListener('message', handlePageMessage);
+window.addEventListener('popstate', checkUrlChange);
+window.setInterval(checkUrlChange, 1000);
 
 chrome.runtime.onMessage.addListener((message: any) => {
   if (message?.type === MessageTypes.TogglePanel) {
@@ -175,7 +207,7 @@ chrome.runtime.onMessage.addListener((message: any) => {
   }
 
   if (message?.type === MessageTypes.FetchConversation) {
-    requestRefresh();
+    syncCurrentConversation();
   }
 
   return false;
@@ -183,3 +215,4 @@ chrome.runtime.onMessage.addListener((message: any) => {
 
 injectNetworkCapture();
 mountUi();
+syncCurrentConversation();

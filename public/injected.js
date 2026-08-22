@@ -1,7 +1,6 @@
 (() => {
   const SOURCE = 'chatgpt-conversation-tree';
   const INSTRUMENTED_KEY = '__ctreeInstrumented';
-  const nonce = document.currentScript?.dataset?.ctreeNonce ?? '';
 
   if (window[INSTRUMENTED_KEY]) {
     return;
@@ -21,7 +20,6 @@
     window.postMessage(
       {
         source: SOURCE,
-        nonce,
         type: 'API_RESPONSE',
         payload,
       },
@@ -97,4 +95,34 @@
     return originalSend.apply(this, args);
   };
 
+  window.__ctreeFetchConversation = async (conversationId) => {
+    try {
+      const response = await originalFetch(`/backend-api/conversation/${conversationId}`, {
+        credentials: 'include',
+        headers: {
+          accept: 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const body = await response.json();
+      captureResponse(`/backend-api/conversation/${conversationId}`, response.status, body);
+      return body;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  window.addEventListener('message', (event) => {
+    if (event.source !== window || !event.data || typeof event.data !== 'object') {
+      return;
+    }
+
+    if (event.data?.source === 'ctree-content' && event.data?.type === 'FETCH_CONVERSATION' && event.data?.conversationId) {
+      void window.__ctreeFetchConversation(event.data.conversationId);
+    }
+  });
 })();

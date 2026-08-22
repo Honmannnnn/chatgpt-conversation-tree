@@ -96,7 +96,7 @@ export function isConversationApiUrl(url: string): boolean {
 }
 
 export function extractConversationIdFromUrl(url: string): string | null {
-  const match = url.match(/\/conversation\/([a-zA-Z0-9_-]+)/i);
+  const match = url.match(/\/(?:c|conversation)\/([a-zA-Z0-9_-]+)/i);
   return match?.[1] ?? null;
 }
 
