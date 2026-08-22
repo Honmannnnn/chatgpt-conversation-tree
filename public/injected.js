@@ -49,6 +49,28 @@
   };
 
   const originalFetch = window.fetch;
+  let cachedAuthHeaders = {};
+
+  const extractAuthHeaders = (input, init) => {
+    try {
+      const headers = init?.headers;
+      if (headers) {
+        if (headers instanceof Headers) {
+          const auth = headers.get('authorization');
+          if (auth) cachedAuthHeaders['Authorization'] = auth;
+          const oaiDevice = headers.get('oai-device-id');
+          if (oaiDevice) cachedAuthHeaders['OAI-Device-Id'] = oaiDevice;
+        } else if (typeof headers === 'object') {
+          const auth = headers['authorization'] || headers['Authorization'];
+          if (auth) cachedAuthHeaders['Authorization'] = auth;
+          const oaiDevice = headers['oai-device-id'] || headers['OAI-Device-Id'];
+          if (oaiDevice) cachedAuthHeaders['OAI-Device-Id'] = oaiDevice;
+        }
+      }
+    } catch {
+      // Ignore header extract error
+    }
+  };
 
   const extractConvId = (url) => {
     const match = url?.match(/\/(?:c|conversation)\/([a-zA-Z0-9_-]+)/i);
@@ -99,6 +121,7 @@
   };
 
   window.fetch = async function patchedFetch(input, init) {
+    extractAuthHeaders(input, init);
     const response = await originalFetch.apply(this, arguments);
     const url = typeof input === 'string'
       ? input
@@ -151,10 +174,26 @@
 
   window.__ctreeFetchConversation = async (conversationId) => {
     try {
+      // Ensure we have active auth token
+      if (!cachedAuthHeaders['Authorization']) {
+        try {
+          const sessionRes = await originalFetch('/api/auth/session', { credentials: 'include' });
+          if (sessionRes.ok) {
+            const session = await sessionRes.json();
+            if (session?.accessToken) {
+              cachedAuthHeaders['Authorization'] = `Bearer ${session.accessToken}`;
+            }
+          }
+        } catch {
+          // Ignore session fetch error
+        }
+      }
+
       const response = await originalFetch(`/backend-api/conversation/${conversationId}`, {
         credentials: 'include',
         headers: {
           accept: 'application/json',
+          ...cachedAuthHeaders,
         },
       });
 

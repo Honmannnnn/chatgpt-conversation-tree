@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { MessageTypes } from '../shared/messages';
 import { extractConversationIdFromUrl, parseConversationApiResponse } from '../shared/api';
+import { parseDomConversation } from '../core/domParser';
 import { useConversationTreeStore } from './store';
 import styles from './styles.css?inline';
 
@@ -162,9 +163,20 @@ function syncCurrentConversation(): void {
     if (extractConversationIdFromUrl(window.location.href) === conversationId) {
       if (response?.data) {
         useConversationTreeStore.getState().setGraph(response.data);
+      } else {
+        // Fallback: parse current DOM messages immediately
+        const domGraph = parseDomConversation(conversationId);
+        if (domGraph && !useConversationTreeStore.getState().graph) {
+          useConversationTreeStore.getState().setGraph(domGraph);
+        }
       }
     }
-  }).catch(() => undefined);
+  }).catch(() => {
+    const domGraph = parseDomConversation(conversationId);
+    if (domGraph && !useConversationTreeStore.getState().graph) {
+      useConversationTreeStore.getState().setGraph(domGraph);
+    }
+  });
 
   // 2. Request active fetch via injected script
   window.postMessage(
