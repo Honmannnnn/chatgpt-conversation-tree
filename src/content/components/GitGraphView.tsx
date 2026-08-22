@@ -106,6 +106,15 @@ export function GitGraphView() {
                   void selectAndNavigate(row.id);
                 }}
               >
+                {/* Solid Transparent Hitbox to prevent cursor/pointer flickering */}
+                <circle
+                  cx={row.cx}
+                  cy={row.cy}
+                  r={12}
+                  fill="transparent"
+                  style={{ pointerEvents: 'all', cursor: 'pointer' }}
+                />
+
                 {/* Outer Ring for Active / Selected */}
                 {row.isActive || isSelected ? (
                   <circle
@@ -116,6 +125,7 @@ export function GitGraphView() {
                     stroke={row.color}
                     strokeWidth={isSelected ? 2.2 : 1.6}
                     strokeOpacity={0.85}
+                    style={{ pointerEvents: 'none' }}
                   />
                 ) : null}
 
@@ -127,6 +137,7 @@ export function GitGraphView() {
                   fill={row.isActive ? row.color : 'var(--ctree-surface)'}
                   stroke={row.color}
                   strokeWidth={1.8}
+                  style={{ pointerEvents: 'none' }}
                 />
               </g>
             );
