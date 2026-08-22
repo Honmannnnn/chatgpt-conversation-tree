@@ -110,7 +110,7 @@ export function TreePanel() {
               <h1>Conversation Tree</h1>
               {graph ? (
                 <span className="ctree-status-badge">
-                  {totalNodesCount} 节点 · {branchCount > 0 ? `${branchCount} 分支` : '单主线'}
+                  {totalNodesCount} 节点 · {graph.isForked ? '独立分叉' : branchCount > 0 ? `${branchCount} 分支` : '单主线'}
                 </span>
               ) : null}
             </div>

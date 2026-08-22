@@ -81,6 +81,17 @@ export function computeGitGraphLayout(
 
   let nextAvailableLane = 1;
 
+  // Detect fork split index for forked conversations
+  let forkSplitIndex = -1;
+  if (graph.isForked && graph.activePath.length > 2) {
+    if (graph.forkedFromMessageId && graph.activePath.includes(graph.forkedFromMessageId)) {
+      forkSplitIndex = graph.activePath.indexOf(graph.forkedFromMessageId) + 1;
+    } else {
+      // Default fork point is the latest turn pair created in this forked chat
+      forkSplitIndex = Math.max(2, graph.activePath.length - 2);
+    }
+  }
+
   function traverse(nodeId: string, currentLane: number) {
     if (visited.has(nodeId) || !nodes[nodeId]) {
       return;
@@ -89,8 +100,17 @@ export function computeGitGraphLayout(
     visited.add(nodeId);
     orderedNodeIds.push(nodeId);
 
-    // Active path nodes ALWAYS stay strictly on Lane 0 (straight vertical mainline)
-    const assignedLane = activeSet.has(nodeId) ? 0 : currentLane;
+    // Active path nodes stay on Lane 0, or branch to Lane 1 if after forkSplitIndex
+    let assignedLane = currentLane;
+    if (activeSet.has(nodeId)) {
+      const activeIdx = graph.activePath.indexOf(nodeId);
+      if (forkSplitIndex > 0 && activeIdx >= forkSplitIndex) {
+        assignedLane = 1;
+        nextAvailableLane = Math.max(nextAvailableLane, 2);
+      } else {
+        assignedLane = 0;
+      }
+    }
     nodeLanes.set(nodeId, assignedLane);
 
     const node = nodes[nodeId];

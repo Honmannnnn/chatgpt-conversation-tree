@@ -192,10 +192,12 @@ export function GitGraphView() {
                         backgroundColor: colorMix(row.color, 12),
                       }}
                     >
-                      分支 #{row.lane}
+                      {graph.isForked && row.lane === 1 ? '独立分叉' : `分支 #${row.lane}`}
                     </span>
                   ) : (
-                    <span className="ctree-git-card__main-tag">主线</span>
+                    <span className="ctree-git-card__main-tag">
+                      {graph.isForked ? '主线继承' : '主线'}
+                    </span>
                   )}
 
                   {row.node.versionLabel ? (
