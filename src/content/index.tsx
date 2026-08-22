@@ -201,6 +201,25 @@ const checkUrlChange = () => {
   }
 };
 
+// Auto-sync when ChatGPT finishes streaming or user submits a message
+let streamObserverTimer: number | undefined;
+const generationObserver = new MutationObserver(() => {
+  if (streamObserverTimer) {
+    window.clearTimeout(streamObserverTimer);
+  }
+  streamObserverTimer = window.setTimeout(() => {
+    const isGenerating = !!document.querySelector('button[data-testid="stop-button"], button[aria-label="Stop streaming"], button[aria-label="停止生成"]');
+    if (!isGenerating) {
+      syncCurrentConversation();
+    }
+  }, 400);
+});
+
+generationObserver.observe(document.documentElement, {
+  childList: true,
+  subtree: true,
+});
+
 window.addEventListener('message', handlePageMessage);
 window.addEventListener('popstate', checkUrlChange);
 window.setInterval(checkUrlChange, 1000);

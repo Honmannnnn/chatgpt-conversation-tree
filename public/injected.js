@@ -50,6 +50,54 @@
 
   const originalFetch = window.fetch;
 
+  const extractConvId = (url) => {
+    const match = url?.match(/\/(?:c|conversation)\/([a-zA-Z0-9_-]+)/i);
+    return match?.[1] ?? null;
+  };
+
+  const handleSseStream = async (response) => {
+    try {
+      const reader = response.body?.getReader();
+      if (!reader) return;
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let convId = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.conversation_id) {
+                convId = data.conversation_id;
+              }
+            } catch {
+              // Ignore partial chunk
+            }
+          }
+        }
+      }
+
+      // Stream completed! Refetch full updated conversation tree immediately
+      const targetId = convId || extractConvId(window.location.href);
+      if (targetId) {
+        setTimeout(() => {
+          void window.__ctreeFetchConversation(targetId);
+        }, 120);
+      }
+    } catch {
+      // Ignore stream errors
+    }
+  };
+
   window.fetch = async function patchedFetch(input, init) {
     const response = await originalFetch.apply(this, arguments);
     const url = typeof input === 'string'
@@ -59,11 +107,17 @@
         : input?.url;
 
     if (isConversationApiUrl(url)) {
-      readJson(response).then((result) => {
-        if (result) {
-          captureResponse(url, result.status, result.body);
-        }
-      });
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('text/event-stream')) {
+        // SSE Streaming response for new messages / replies
+        void handleSseStream(response.clone());
+      } else {
+        readJson(response).then((result) => {
+          if (result) {
+            captureResponse(url, result.status, result.body);
+          }
+        });
+      }
     }
 
     return response;
