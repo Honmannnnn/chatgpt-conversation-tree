@@ -16,6 +16,7 @@ export function TreePanel() {
   const notice = useConversationTreeStore((state) => state.notice);
   const roleFilter = useConversationTreeStore((state) => state.roleFilter);
   const activeOnly = useConversationTreeStore((state) => state.activeOnly);
+  const isLoading = useConversationTreeStore((state) => state.isLoading);
   const setSearchQuery = useConversationTreeStore((state) => state.setSearchQuery);
   const setPanelOpen = useConversationTreeStore((state) => state.setPanelOpen);
   const setSelectedNodeId = useConversationTreeStore((state) => state.setSelectedNodeId);
@@ -250,7 +251,25 @@ export function TreePanel() {
 
       {/* 4. Main Body: Pure Git Branch View */}
       <div className="ctree-panel__body">
-        {graph ? (
+        {isLoading ? (
+          <div className="ctree-skeleton-container" aria-label="加载中">
+            <div className="ctree-skeleton-rails">
+              <div className="ctree-skeleton-dot is-pulse" />
+              <div className="ctree-skeleton-line" />
+              <div className="ctree-skeleton-dot is-pulse" style={{ animationDelay: '200ms' }} />
+              <div className="ctree-skeleton-line" />
+              <div className="ctree-skeleton-dot is-pulse" style={{ animationDelay: '400ms' }} />
+              <div className="ctree-skeleton-line" />
+              <div className="ctree-skeleton-dot is-pulse" style={{ animationDelay: '600ms' }} />
+            </div>
+            <div className="ctree-skeleton-cards">
+              <div className="ctree-skeleton-card is-shimmer" />
+              <div className="ctree-skeleton-card is-shimmer" style={{ animationDelay: '150ms' }} />
+              <div className="ctree-skeleton-card is-shimmer" style={{ animationDelay: '300ms' }} />
+              <div className="ctree-skeleton-card is-shimmer" style={{ animationDelay: '450ms' }} />
+            </div>
+          </div>
+        ) : graph ? (
           <>
             <div className="ctree-git-container">
               <GitGraphView />

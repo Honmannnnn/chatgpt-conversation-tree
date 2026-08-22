@@ -150,9 +150,12 @@ function syncCurrentConversation(): void {
     return;
   }
 
-  // If navigated to a different conversation, clear stale previous tree immediately
-  if (currentGraph && currentGraph.conversationId !== conversationId) {
-    useConversationTreeStore.getState().setGraph(null);
+  // If navigated to a different conversation, clear stale previous tree immediately and show loading
+  if (!currentGraph || currentGraph.conversationId !== conversationId) {
+    useConversationTreeStore.getState().setIsLoading(true);
+    if (currentGraph) {
+      useConversationTreeStore.getState().setGraph(null);
+    }
   }
 
   // 1. Try restoring from local storage

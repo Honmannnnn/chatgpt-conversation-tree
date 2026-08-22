@@ -21,8 +21,8 @@ export function GitGraphView() {
   const containerRef = useRef<HTMLDivElement>(null);
   const activeNodeRef = useRef<HTMLDivElement>(null);
 
-  const ROW_HEIGHT = 80;
-  const LANE_WIDTH = 24;
+  const ROW_HEIGHT = 74;
+  const LANE_WIDTH = 16;
 
   const layout = useMemo(() => {
     if (!graph) return null;
@@ -59,14 +59,17 @@ export function GitGraphView() {
     return null;
   }
 
-  const railsWidth = Math.max(48, (layout.totalLanes + 1) * LANE_WIDTH + 8);
-  const lanePadding = 16;
+  const railsWidth = Math.max(36, (layout.totalLanes + 1) * LANE_WIDTH + 6);
+  const lanePadding = 12;
 
   return (
     <div className="ctree-git-graph" ref={containerRef}>
       <div
         className="ctree-git-graph__inner"
-        style={{ minHeight: `${layout.totalHeight}px` }}
+        style={{
+          minHeight: `${layout.totalHeight}px`,
+          minWidth: `${Math.max(360, railsWidth + 240)}px`,
+        }}
       >
         {/* SVG Git Rails & Curves */}
         <svg
@@ -83,7 +86,7 @@ export function GitGraphView() {
               key={seg.id}
               d={seg.path}
               stroke={seg.color}
-              strokeWidth={seg.isActive ? 2.6 : 1.6}
+              strokeWidth={seg.isActive ? 2.4 : 1.5}
               strokeOpacity={seg.isActive ? 1 : 0.45}
               fill="none"
               strokeLinecap="round"
@@ -111,10 +114,10 @@ export function GitGraphView() {
                   <circle
                     cx={cx}
                     cy={cy}
-                    r={isSelected ? 9 : 7.5}
+                    r={isSelected ? 7.5 : 6.5}
                     fill="none"
                     stroke={row.color}
-                    strokeWidth={isSelected ? 2.5 : 1.8}
+                    strokeWidth={isSelected ? 2.2 : 1.6}
                     strokeOpacity={0.85}
                   />
                 ) : null}
@@ -123,10 +126,10 @@ export function GitGraphView() {
                 <circle
                   cx={cx}
                   cy={cy}
-                  r={row.isMainline ? 5.5 : 4.5}
+                  r={row.isMainline ? 4.5 : 3.8}
                   fill={row.isActive ? row.color : 'var(--ctree-surface)'}
                   stroke={row.color}
-                  strokeWidth={2}
+                  strokeWidth={1.8}
                 />
               </g>
             );
@@ -136,7 +139,7 @@ export function GitGraphView() {
         {/* Message Cards List */}
         <div
           className="ctree-git-cards"
-          style={{ marginLeft: `${railsWidth + 10}px` }}
+          style={{ marginLeft: `${railsWidth + 8}px` }}
         >
           {layout.rows.map((row) => {
             const isSelected = selectedNodeId === row.id;

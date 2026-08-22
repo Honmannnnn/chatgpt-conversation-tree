@@ -12,6 +12,7 @@ interface ConversationTreeState {
   roleFilter: MessageRole | 'all';
   activeOnly: boolean;
   viewMode: 'git' | 'tree';
+  isLoading: boolean;
   setGraph: (graph: ConversationGraph | null) => void;
   setPanelOpen: (open: boolean) => void;
   togglePanel: () => void;
@@ -23,6 +24,7 @@ interface ConversationTreeState {
   setRoleFilter: (roleFilter: MessageRole | 'all') => void;
   setActiveOnly: (activeOnly: boolean) => void;
   setViewMode: (viewMode: 'git' | 'tree') => void;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
 export const useConversationTreeStore = create<ConversationTreeState>((set) => ({
@@ -36,7 +38,8 @@ export const useConversationTreeStore = create<ConversationTreeState>((set) => (
   roleFilter: 'all',
   activeOnly: false,
   viewMode: 'git',
-  setGraph: (graph) => set({ graph, selectedNodeId: null, collapsed: {} }),
+  isLoading: false,
+  setGraph: (graph) => set({ graph, selectedNodeId: null, collapsed: {}, isLoading: false }),
   setPanelOpen: (panelOpen) => set({ panelOpen }),
   togglePanel: () => set((state) => ({ panelOpen: !state.panelOpen })),
   setSelectedNodeId: (selectedNodeId) => set({ selectedNodeId }),
@@ -52,4 +55,5 @@ export const useConversationTreeStore = create<ConversationTreeState>((set) => (
   setRoleFilter: (roleFilter) => set({ roleFilter }),
   setActiveOnly: (activeOnly) => set({ activeOnly }),
   setViewMode: (viewMode) => set({ viewMode }),
+  setIsLoading: (isLoading) => set({ isLoading }),
 }));

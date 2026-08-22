@@ -1002,3 +1002,94 @@ button {
   font-weight: 700;
   color: var(--ctree-muted);
 }
+
+/* ==========================================================================
+   Skeleton Loading Animation (Linear / Raycast Style)
+   ========================================================================== */
+
+.ctree-skeleton-container {
+  display: flex;
+  gap: 12px;
+  padding: 16px 14px;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ctree-bg);
+}
+
+.ctree-skeleton-rails {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 24px;
+  flex: 0 0 24px;
+  padding-top: 24px;
+}
+
+.ctree-skeleton-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--ctree-border);
+}
+
+.ctree-skeleton-dot.is-pulse {
+  animation: ctree-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ctree-pulse {
+  0%, 100% {
+    background: var(--ctree-border);
+    transform: scale(0.9);
+  }
+  50% {
+    background: var(--ctree-accent);
+    transform: scale(1.15);
+    box-shadow: 0 0 8px var(--ctree-accent);
+  }
+}
+
+.ctree-skeleton-line {
+  width: 2px;
+  height: 60px;
+  background: var(--ctree-border);
+  opacity: 0.6;
+}
+
+.ctree-skeleton-cards {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ctree-skeleton-card {
+  height: 66px;
+  background: var(--ctree-surface);
+  border: 1px solid var(--ctree-border);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctree-skeleton-card.is-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ctree-accent) 8%, transparent) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: ctree-shimmer 1.5s infinite;
+}
+
+@keyframes ctree-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
