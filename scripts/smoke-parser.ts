@@ -67,6 +67,42 @@ if (!graph.activePath.includes('a2') || !graph.activePath.includes('u1')) {
   throw new Error('Active path was not built correctly.');
 }
 
+const cyclicSample = {
+  title: 'Cyclic',
+  conversation_id: 'cyclic-conversation',
+  current_node: 'a',
+  mapping: {
+    a: {
+      id: 'a',
+      parent: 'b',
+      children: ['b'],
+      message: {
+        id: 'ma',
+        author: { role: 'user' },
+        create_time: 1,
+        content: { content_type: 'text', parts: ['cycle'] },
+        metadata: {},
+      },
+    },
+    b: {
+      id: 'b',
+      parent: 'a',
+      children: ['a'],
+      message: {
+        id: 'mb',
+        author: { role: 'assistant' },
+        create_time: 2,
+        content: { content_type: 'text', parts: ['cycle'] },
+        metadata: {},
+      },
+    },
+  },
+};
+
+if (parseConversationApiResponse(cyclicSample) !== null) {
+  throw new Error('Cyclic mapping should be rejected.');
+}
+
 console.log('Smoke parser passed.', {
   nodeCount: Object.keys(graph.nodes).length,
   activePath: graph.activePath,

@@ -131,6 +131,48 @@ function buildVersionGroups(nodes: MessageNode[]): Map<string, { groupId: string
   return result;
 }
 
+function hasCycle(nodes: MessageNode[]): boolean {
+  const state = new Map<string, 1 | 2>();
+  const nodeMap = new Map(nodes.map((node) => [node.id, node]));
+
+  for (const start of nodes) {
+    if (state.has(start.id)) {
+      continue;
+    }
+
+    const stack: Array<{ id: string; nextIndex: number }> = [{ id: start.id, nextIndex: 0 }];
+    state.set(start.id, 1);
+
+    while (stack.length) {
+      const frame = stack[stack.length - 1];
+      const node = nodeMap.get(frame.id);
+      const childId = node?.children[frame.nextIndex];
+
+      if (!childId || !nodeMap.has(childId)) {
+        state.set(frame.id, 2);
+        stack.pop();
+        continue;
+      }
+
+      frame.nextIndex += 1;
+      const childState = state.get(childId);
+
+      if (childState === 1) {
+        return true;
+      }
+
+      if (childState === 2) {
+        continue;
+      }
+
+      state.set(childId, 1);
+      stack.push({ id: childId, nextIndex: 0 });
+    }
+  }
+
+  return false;
+}
+
 export function parseConversationApiResponse(payload: unknown): ConversationGraph | null {
   if (!isPlainObject(payload)) {
     return null;
@@ -206,6 +248,10 @@ export function parseConversationApiResponse(payload: unknown): ConversationGrap
     const version = versionGroups.get(node.id);
     node.versionGroupId = version?.groupId;
     node.versionLabel = version?.label;
+  }
+
+  if (hasCycle(nodes)) {
+    return null;
   }
 
   const childIds = new Set(nodes.flatMap((node) => node.children));

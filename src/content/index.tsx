@@ -7,6 +7,8 @@ import styles from './styles.css?inline';
 
 const HOST_ID = 'ctree-root';
 const INJECTED_SCRIPT_ID = 'ctree-injected';
+const MESSAGE_SOURCE = 'chatgpt-conversation-tree';
+const captureNonce = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
 
 function isDarkTheme(): boolean {
   const html = document.documentElement;
@@ -114,6 +116,7 @@ function injectNetworkCapture(): void {
     script.id = INJECTED_SCRIPT_ID;
     script.src = chrome.runtime.getURL('injected.js');
     script.dataset.ctreeInjected = 'true';
+    script.dataset.ctreeNonce = captureNonce;
     document.head.appendChild(script);
   };
 
@@ -143,7 +146,7 @@ function handlePageMessage(event: MessageEvent): void {
   }
 
   const message = event.data as Record<string, any>;
-  if (message.source !== 'chatgpt-conversation-tree') {
+  if (message.source !== MESSAGE_SOURCE || message.nonce !== captureNonce) {
     return;
   }
 
