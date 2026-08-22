@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MessageTypes } from '../shared/messages';
+import { extractConversationIdFromUrl } from '../shared/api';
 import type { ConversationGraph, ExtensionResponse } from '../shared/types';
 import { LogoMark } from '../shared/LogoMark';
 
@@ -8,12 +9,38 @@ export function Popup() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void chrome.runtime.sendMessage({ type: MessageTypes.GetGraph })
-      .then((response: ExtensionResponse<ConversationGraph | null>) => {
+    async function loadActiveGraph() {
+      try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const conversationId = tab?.url ? extractConversationIdFromUrl(tab.url) : null;
+
+        if (tab?.id) {
+          try {
+            const contentState: any = await chrome.tabs.sendMessage(tab.id, { type: 'GET_CONTENT_STATE' });
+            if (contentState?.graph) {
+              setGraph(contentState.graph);
+              setLoading(false);
+              return;
+            }
+          } catch {
+            // Content script communication might fail if tab is not ChatGPT
+          }
+        }
+
+        const response: ExtensionResponse<ConversationGraph | null> = await chrome.runtime.sendMessage({
+          type: MessageTypes.GetGraph,
+          payload: { conversationId },
+        });
+
         setGraph(response.data ?? null);
+      } catch {
+        setGraph(null);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    }
+
+    void loadActiveGraph();
   }, []);
 
   const togglePanel = () => {

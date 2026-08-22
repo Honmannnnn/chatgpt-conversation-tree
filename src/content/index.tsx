@@ -151,6 +151,10 @@ function syncCurrentConversation(): void {
   }).then((response) => {
     if (response?.data) {
       useConversationTreeStore.getState().setGraph(response.data);
+      void chrome.runtime.sendMessage({
+        type: MessageTypes.CaptureApiResponse,
+        payload: response.data,
+      }).catch(() => undefined);
     }
   }).catch(() => undefined);
 
@@ -201,7 +205,12 @@ window.addEventListener('message', handlePageMessage);
 window.addEventListener('popstate', checkUrlChange);
 window.setInterval(checkUrlChange, 1000);
 
-chrome.runtime.onMessage.addListener((message: any) => {
+chrome.runtime.onMessage.addListener((message: any, _sender: any, sendResponse: (response?: any) => void) => {
+  if (message?.type === 'GET_CONTENT_STATE') {
+    sendResponse({ graph: useConversationTreeStore.getState().graph });
+    return true;
+  }
+
   if (message?.type === MessageTypes.TogglePanel) {
     useConversationTreeStore.getState().togglePanel();
   }
